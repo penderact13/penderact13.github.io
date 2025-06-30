@@ -57,91 +57,36 @@
       renderer.render(scene, camera);
     };
 
-    input.addEventListener('change', (e) => {
+    input.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       console.log("📂 File selected:", file.name);
 
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const img = new Image();
-        img.onload = function () {
-          console.log("✅ Image loaded successfully");
+      const bitmap = await createImageBitmap(file).catch(err => {
+        console.error("❌ Failed to decode image:", err);
+        alert("Could not decode image. Try PNG or JPEG.");
+      });
+      if (!bitmap) return;
 
-          // Fallback for browsers that don’t support .bmp in <img>
-          const canvasTmp = document.createElement('canvas');
-          canvasTmp.width = img.width;
-          canvasTmp.height = img.height;
-          const ctx = canvasTmp.getContext('2d');
-          ctx.drawImage(img, 0, 0);
-          const tex = new THREE.Texture(canvasTmp);
-          tex.needsUpdate = true;
-          tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      const canvasImg = document.createElement('canvas');
+      canvasImg.width = bitmap.width;
+      canvasImg.height = bitmap.height;
+      const ctx = canvasImg.getContext('2d');
+      ctx.drawImage(bitmap, 0, 0);
+      const tex = new THREE.Texture(canvasImg);
+      tex.needsUpdate = true;
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
 
-          if (mesh) scene.remove(mesh);
-          texture = tex;
+      if (mesh) scene.remove(mesh);
+      texture = tex;
 
-          const geo = new THREE.BoxGeometry(1, 1, 1);
-          const uvs = geo.attributes.uv.array;
+      const geo = new THREE.BoxGeometry(1, 1, 1);
+      const uvs = geo.attributes.uv.array;
 
-          const tiles = {
-            top:    [0/3, 0/2, 1/3, 1/2],
-            bottom: [1/3, 1/2, 2/3, 1],
-            left:   [0/3, 1/2, 1/3, 1],
-            right:  [2/3, 0/2, 1, 1/2],
-            front:  [1/3, 0, 2/3, 1/2],
-            back:   [0, 1/2, 1/3, 1],
-          };
-
-          const applyFaceUV = (face, faceIdx) => {
-            const [u0, v0, u1, v1] = tiles[face];
-            const base = faceIdx * 12;
-            uvs.set([
-              u0, v1, u1, v1, u1, v0,
-              u0, v1, u1, v0, u0, v0
-            ], base);
-          };
-
-          applyFaceUV('right', 0);
-          applyFaceUV('left', 1);
-          applyFaceUV('top', 2);
-          applyFaceUV('bottom', 3);
-          applyFaceUV('front', 4);
-          applyFaceUV('back', 5);
-
-          geo.attributes.uv.needsUpdate = true;
-
-          const mat = new THREE.MeshStandardMaterial({ map: tex });
-          mesh = new THREE.Mesh(geo, mat);
-          scene.add(mesh);
-
-          button.disabled = false;
-        };
-
-        img.onerror = function () {
-          console.error("❌ Failed to load image. Try using a .png or .jpg instead of .bmp.");
-        };
-
-        img.src = event.target.result;
-      };
-
-      reader.readAsDataURL(file);
-    });
-
-    button.addEventListener('click', () => {
-      if (!mesh) return;
-      const exporter = new OBJExporter();
-      const obj = exporter.parse(mesh);
-
-      const blob = new Blob([obj], { type: 'text/plain' });
-      const link = document.createElement('a');
-      link.download = 'cube.obj';
-      link.href = URL.createObjectURL(blob);
-      link.click();
-    });
-
-    animate();
-  </script>
-</body>
-</html>
+      const tiles = {
+        top:    [0/3, 0/2, 1/3, 1/2],
+        bottom: [1/3, 1/2, 2/3, 1],
+        left:   [0/3, 1/2, 1/3, 1],
+        right:  [2/3, 0/2, 1, 1/2],
+        front:  [1/3, 0,
