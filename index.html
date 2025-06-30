@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cube Texture OBJ Generator</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 40px; background: #202020; color: white; }
+    canvas { display: block; margin: 20px auto; border: 1px solid #444; }
+    input, button { margin: 10px; padding: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Cube Texture OBJ Generator</h1>
+  <input type="file" id="textureInput" accept="image/bmp" />
+  <br>
+  <button id="exportBtn" disabled>Download OBJ + MTL</button>
+  <canvas id="preview" width="400" height="400"></canvas>
+  <script type="module">
+    import * as THREE from 'https://cdn.skypack.dev/three';
+    import { OBJExporter } from 'https://cdn.skypack.dev/three-stdlib/exporters/OBJExporter';
+
+    const input = document.getElementById('textureInput');
+    const button = document.getElementById('exportBtn');
+    const canvas = document.getElementById('preview');
+
+    let texture, mesh;
+
+    // Three.js setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 100);
+    camera.position.z = 2;
+    const renderer = new THREE.WebGLRenderer({ canvas });
+    renderer.setSize(400, 400);
+
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(2, 2, 2);
+    scene.add(light);
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+      if (mesh) mesh.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    };
+
+    input.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+
+      const loader = new THREE.TextureLoader();
+      loader.load(url, (tex) => {
+        if (mesh) scene.remove(mesh);
+
+        texture = tex;
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+
+        const geo = new THREE.BoxGeometry(1, 1, 1);
+        const faceUVs = [];
+
+        // 3x2 tile layout UVs per face
+        const tiles = {
+          top:    [0/3, 0/2, 1/3, 1/2],
+          bottom: [1/3, 1/2, 2/3, 1],
+          left:   [0/3, 1/2, 1/3, 1],
+          right:  [2/3, 0/2, 1, 1/2],
+          front:  [1/3, 0, 2/3, 1/2],
+          back:   [0, 1/2, 1/3, 1],
+        };
+
+        const uvs = geo.attributes.uv.array;
+
+        // Reassign UVs face by face (each face = 2 triangles = 6 floats)
+        const applyFaceUV = (face, faceIdx) => {
+          const [u0, v0, u1, v1] = tiles[face];
+          const base = faceIdx * 12; // 6 vertices * 2 components
+          uvs.set([
+            u0, v1, u1, v1, u1, v0,
+            u0, v1, u1, v0, u0, v0
+          ], base);
+        };
+
+        applyFaceUV('right', 0);
+        applyFaceUV('left', 1);
+        applyFaceUV('top', 2);
+        applyFaceUV('bottom', 3);
+        applyFaceUV('front', 4);
+        applyFaceUV('back', 5);
+
+        geo.attributes.uv.needsUpdate = true;
+
+        const mat = new THREE.MeshStandardMaterial({ map: tex });
+        mesh = new THREE.Mesh(geo, mat);
+        scene.add(mesh);
+        button.disabled = false;
+      });
+    });
+
+    button.addEventListener('click', () => {
+      const exporter = new OBJExporter();
+      const obj = exporter.parse(mesh);
+
+      const blob = new Blob([obj], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.download = 'cube.obj';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    });
+
+    animate();
+  </script>
+</body>
+</html>
