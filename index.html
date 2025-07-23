@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Structure Analyzer</title>
+    <title>GitChat - Developer Chat Room</title>
     <style>
         * {
             margin: 0;
@@ -12,505 +12,715 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #24292e 0%, #1a1e22 50%, #0d1117 100%);
             min-height: 100vh;
-            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f0f6fc;
         }
 
         .container {
-            max-width: 1200px;
+            background: rgba(13, 17, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #30363d;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+        }
+
+        .auth-container {
+            text-align: center;
+            max-width: 400px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
         }
 
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 2rem;
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            font-weight: 300;
+        .logo svg {
+            width: 48px;
+            height: 48px;
+            fill: #f78166;
         }
 
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
+        .logo h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f78166 0%, #58a6ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .upload-section {
-            padding: 40px;
-            text-align: center;
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 2rem;
+            font-size: 16px;
         }
 
-        .upload-area {
-            border: 3px dashed #3498db;
-            border-radius: 15px;
-            padding: 60px 40px;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        }
-
-        .upload-area:hover {
-            border-color: #2980b9;
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            transform: translateY(-2px);
-        }
-
-        .upload-area.dragover {
-            border-color: #27ae60;
-            background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-        }
-
-        .upload-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
-            color: #3498db;
-        }
-
-        .upload-text {
-            font-size: 1.3em;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .upload-subtext {
-            color: #7f8c8d;
-            font-size: 1em;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        .github-login-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: #238636;
             color: white;
             border: none;
-            padding: 15px 30px;
-            font-size: 1.1em;
-            border-radius: 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 10px;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 2rem;
         }
 
-        .btn:hover {
+        .github-login-btn:hover {
+            background: #2ea043;
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
         }
 
-        .btn:active {
-            transform: translateY(0);
+        .github-login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .btn.secondary {
-            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-            box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3);
+        .github-login-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
         }
 
-        .btn.secondary:hover {
-            box-shadow: 0 8px 25px rgba(149, 165, 166, 0.4);
+        .chat-container {
+            display: none;
+            height: 600px;
+            flex-direction: column;
         }
 
-        .results-section {
-            padding: 40px;
-            background: #f8f9fa;
-            border-top: 1px solid #dee2e6;
-        }
-
-        .results-header {
+        .chat-header {
+            background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+            border: 1px solid #30363d;
+            color: #f0f6fc;
+            padding: 1rem 1.5rem;
+            border-radius: 12px 12px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
         }
 
-        .results-title {
-            font-size: 1.5em;
-            color: #2c3e50;
-            margin: 0;
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .file-count {
-            background: #3498db;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-
-        .output-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            max-height: 600px;
-            overflow-y: auto;
-            border: 1px solid #dee2e6;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .processing {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
+        .user-avatar {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            border: 2px solid #58a6ff;
+        }
+
+        .welcome-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .connection-status {
+            font-size: 12px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+        }
+
+        .logout-btn {
+            background: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #0d1117;
+            max-height: 400px;
+            border-left: 1px solid #30363d;
+            border-right: 1px solid #30363d;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+            border: 1px solid #21262d;
+        }
+
+        .message.own {
+            background: linear-gradient(135deg, #1f6feb 0%, #0969da 100%);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+            border-color: #0969da;
+        }
+
+        .message.other {
+            background: #21262d;
+            border-color: #30363d;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+            color: #f0f6fc;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            opacity: 0.9;
+        }
+
+        .message-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .chat-input-container {
+            padding: 1.5rem;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 0 0 12px 12px;
+            border-top: none;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            resize: none;
+            min-height: 20px;
+            max-height: 100px;
+            background: #0d1117;
+            color: #f0f6fc;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            border-color: #58a6ff;
+        }
+
+        .chat-input::placeholder {
+            color: #8b949e;
+        }
+
+        .send-btn {
+            padding: 12px 20px;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .send-btn:hover {
+            background: #2ea043;
+            transform: translateY(-1px);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            color: #f85149;
+            margin-top: 16px;
+            font-size: 14px;
+            text-align: center;
+            padding: 12px;
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            border-radius: 6px;
+        }
+
+        .success-message {
+            color: #3fb950;
+            margin-top: 16px;
+            font-size: 14px;
+            text-align: center;
+            padding: 12px;
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 6px;
+        }
+
+        .loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
         }
 
-        .hidden {
-            display: none;
+        .config-placeholder {
+            background: rgba(187, 128, 9, 0.15);
+            border: 1px solid #d29922;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 12px;
+            color: #f2cc60;
+            line-height: 1.5;
         }
 
-        .error {
-            background: #e74c3c;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: center;
+        .welcome-message {
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #3fb950;
+            font-size: 14px;
+            line-height: 1.5;
         }
 
-        .success {
-            background: #27ae60;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            text-align: center;
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+
+            .logo h1 {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>📁 File Structure Analyzer</h1>
-            <p>Upload any file or archive and get a beautifully formatted directory structure</p>
-        </div>
-
-        <div class="upload-section">
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📤</div>
-                <div class="upload-text">Drop your file here or click to browse</div>
-                <div class="upload-subtext">Supports ZIP, RAR, TAR, and other archive formats</div>
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-container">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+                <h1>GitChat</h1>
             </div>
-            <input type="file" id="fileInput" class="file-input" accept=".zip,.rar,.tar,.gz,.7z,*">
-            <button class="btn" onclick="document.getElementById('fileInput').click()">
-                Choose File
+            <p class="subtitle">Real-time chat for developers</p>
+            
+            <div class="config-placeholder">
+                <strong>⚙️ Setup Required</strong><br>
+                Replace the config object below with your project's configuration
+            </div>
+            
+            <div class="welcome-message">
+                <strong>🚀 Sign in with GitHub</strong><br>
+                Click the button below to join the developer chat room using your GitHub account
+            </div>
+
+            <button id="githubLoginBtn" class="github-login-btn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Continue with GitHub
             </button>
+
+            <div id="authError" class="error-message" style="display: none;"></div>
+            <div id="authSuccess" class="success-message" style="display: none;"></div>
         </div>
 
-        <div id="resultsSection" class="results-section hidden">
-            <div class="results-header">
-                <h2 class="results-title">File Structure</h2>
-                <span id="fileCount" class="file-count">0 items</span>
+        <!-- Chat Section -->
+        <div id="chatSection" class="chat-container">
+            <div class="chat-header">
+                <div class="user-info">
+                    <img id="userAvatar" class="user-avatar" src="" alt="User Avatar">
+                    <div>
+                        <div class="welcome-text">Welcome, <span id="currentUser"></span>!</div>
+                        <div class="connection-status">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="connectionStatus">Connected</span> • 
+                            <span id="onlineCount">0</span> developers online
+                        </div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Sign Out</button>
             </div>
-            <div class="output-container" id="outputContainer"></div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" onclick="downloadResult()">
-                    💾 Download as TXT
-                </button>
-                <button class="btn secondary" onclick="copyToClipboard()">
-                    📋 Copy to Clipboard
-                </button>
+            
+            <div id="chatMessages" class="chat-messages">
+                <!-- Messages will be loaded here -->
             </div>
-        </div>
-
-        <div id="processing" class="processing hidden">
-            <div class="spinner"></div>
-            <p>Processing your file...</p>
+            
+            <div class="chat-input-container">
+                <form id="chatForm" class="chat-input-form">
+                    <textarea id="chatInput" class="chat-input" placeholder="Type your message..." required rows="1"></textarea>
+                    <button type="submit" class="send-btn" id="sendBtn">Send</button>
+                </form>
+            </div>
         </div>
     </div>
 
-    <script>
-        let fileStructure = '';
-        let fileCount = 0;
+    <!-- Firebase/Backend SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            signInWithPopup,
+            GithubAuthProvider,
+            signOut, 
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            query, 
+            orderBy, 
+            limit, 
+            onSnapshot,
+            serverTimestamp,
+            getDocs
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // File type icons mapping
-        const fileIcons = {
-            // Folders
-            folder: '📁',
-            
-            // Images
-            jpg: '🖼️', jpeg: '🖼️', png: '🖼️', gif: '🖼️', bmp: '🖼️', svg: '🖼️', webp: '🖼️', ico: '🖼️',
-            
-            // Documents
-            txt: '📝', md: '🪧', readme: '🪧', doc: '📄', docx: '📄', pdf: '📕', rtf: '📄',
-            
-            // Code files
-            js: '💻', ts: '💻', jsx: '💻', tsx: '💻', html: '🌐', css: '🎨', scss: '🎨', sass: '🎨',
-            py: '🐍', java: '☕', cpp: '⚙️', c: '⚙️', cs: '💜', php: '🐘', rb: '💎', go: '🐹',
-            rust: '🦀', swift: '🍎', kotlin: '🟣', scala: '🔴', r: '📊', matlab: '📊',
-            
-            // Data files
-            json: '📊', xml: '📊', csv: '📊', xlsx: '📊', xls: '📊', sql: '🗃️', db: '🗃️',
-            
-            // Config files
-            yml: '⚙️', yaml: '⚙️', toml: '⚙️', ini: '⚙️', cfg: '⚙️', conf: '⚙️',
-            
-            // Archives
-            zip: '📦', rar: '📦', tar: '📦', gz: '📦', '7z': '📦', bz2: '📦',
-            
-            // Media
-            mp3: '🎵', wav: '🎵', flac: '🎵', mp4: '🎬', avi: '🎬', mkv: '🎬', mov: '🎬',
-            
-            // Default
-            default: '📄'
-        };
+        const firebaseConfig = {
+  apiKey: "AIzaSyDsy8TLR5rM8hXx4RCOupMesFTFyAnhP6I",
+  authDomain: "mychat-a0c39.firebaseapp.com",
+  projectId: "mychat-a0c39",
+  storageBucket: "mychat-a0c39.firebasestorage.app",
+  messagingSenderId: "258621648606",
+  appId: "1:258621648606:web:574317aba2c4767a621c4f",
+  measurementId: "G-CWDC7Y80ZX"
+};
 
-        function getFileIcon(fileName, isFolder = false) {
-            if (isFolder) return fileIcons.folder;
-            
-            const ext = fileName.split('.').pop().toLowerCase();
-            const nameKey = fileName.toLowerCase();
-            
-            // Special case for README files
-            if (nameKey.includes('readme')) return fileIcons.readme;
-            
-            return fileIcons[ext] || fileIcons.default;
+        // Initialize
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GithubAuthProvider();
+
+        // Global variables
+        let currentUser = null;
+        let messagesUnsubscribe = null;
+
+        // Clear error/success messages
+        function clearMessages() {
+            document.getElementById('authError').style.display = 'none';
+            document.getElementById('authSuccess').style.display = 'none';
         }
 
-        // Drag and drop functionality
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
+        // GitHub login handler
+        document.getElementById('githubLoginBtn').addEventListener('click', async function() {
+            const loginBtn = this;
+            const errorDiv = document.getElementById('authError');
+            const successDiv = document.getElementById('authSuccess');
+            
+            clearMessages();
+            
+            loginBtn.textContent = 'Signing in...';
+            loginBtn.classList.add('loading');
+            loginBtn.disabled = true;
 
-        uploadArea.addEventListener('click', () => fileInput.click());
-        
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                processFile(files[0]);
-            }
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                processFile(e.target.files[0]);
-            }
-        });
-
-        function shouldSkipFile(path) {
-            const fileName = path.split('/').pop();
-            const pathLower = path.toLowerCase();
-            
-            // Skip macOS system files and folders
-            if (pathLower.includes('__macosx') || pathLower.includes('_macosx')) return true;
-            if (fileName.startsWith('._')) return true;
-            if (fileName === '.DS_Store') return true;
-            
-            // Skip Windows system files
-            if (fileName === 'Thumbs.db') return true;
-            if (fileName === 'desktop.ini') return true;
-            if (fileName === 'ehthumbs.db') return true;
-            if (fileName === '$RECYCLE.BIN') return true;
-            if (fileName === 'System Volume Information') return true;
-            
-            // Skip Linux system files
-            if (fileName === '.directory') return true;
-            if (fileName === '.trash') return true;
-            if (fileName === '.Trash-1000') return true;
-            
-            // Skip common editor/IDE files
-            if (fileName === '.gitkeep') return true;
-            if (fileName === '.gitignore' && path.split('/').length === 1) return true; // Only skip root .gitignore
-            if (fileName === '.svn') return true;
-            if (fileName === '.hg') return true;
-            
-            // Skip empty paths
-            if (path === '' || fileName === '') return true;
-            
-            return false;
-        }
-
-        async function processFile(file) {
-            showProcessing();
-            
             try {
-                // Reset counters
-                fileCount = 0;
-                fileStructure = '';
+                const result = await signInWithPopup(auth, provider);
+                successDiv.textContent = 'Successfully signed in with GitHub!';
+                successDiv.style.display = 'block';
+            } catch (error) {
+                console.error('GitHub login error:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
                 
-                // Check if it's an archive file
-                const fileName = file.name.toLowerCase();
-                const isArchive = fileName.endsWith('.zip') || fileName.endsWith('.rar') || 
-                                fileName.endsWith('.tar') || fileName.endsWith('.gz') || 
-                                fileName.endsWith('.7z') || fileName.endsWith('.bz2');
+                let errorMessage = 'Failed to sign in with GitHub. Please try again.';
                 
-                if (isArchive) {
-                    await processArchive(file);
-                } else {
-                    // Single file
-                    fileStructure = `${getFileIcon(file.name)} ${file.name}\n`;
-                    fileCount = 1;
+                switch (error.code) {
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = 'Sign-in popup was closed. Please try again.';
+                        break;
+                    case 'auth/popup-blocked':
+                        errorMessage = 'Popup was blocked. Please allow popups and try again.';
+                        break;
+                    case 'auth/cancelled-popup-request':
+                        errorMessage = 'Sign-in was cancelled. Please try again.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your connection and try again.';
+                        break;
                 }
                 
-                showResults();
-                
-            } catch (error) {
-                showError('Error processing file: ' + error.message);
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+            } finally {
+                loginBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    Continue with GitHub
+                `;
+                loginBtn.classList.remove('loading');
+                loginBtn.disabled = false;
             }
+        });
+
+        // Auth state listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                showChatSection();
+            } else {
+                currentUser = null;
+                showAuthSection();
+            }
+        });
+
+        // Show chat section
+        function showChatSection() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'flex';
+            
+            // Set user info
+            document.getElementById('currentUser').textContent = currentUser.displayName || currentUser.email;
+            document.getElementById('userAvatar').src = currentUser.photoURL || `https://github.com/identicons/${currentUser.uid}.png`;
+            
+            // Load messages
+            loadMessages();
+            
+            // Focus on chat input
+            document.getElementById('chatInput').focus();
+            
+            clearMessages();
         }
 
-        async function processArchive(file) {
-            const JSZip = await loadJSZip();
+        // Show auth section
+        function showAuthSection() {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('chatSection').style.display = 'none';
             
-            try {
-                const zip = await JSZip.loadAsync(file);
-                const structure = {};
-                
-                // Build structure - filter out system files
-                Object.keys(zip.files).forEach(path => {
-                    // Skip system files and folders
-                    if (shouldSkipFile(path)) return;
-                    
-                    const parts = path.split('/');
-                    let current = structure;
-                    
-                    parts.forEach((part, index) => {
-                        if (part === '') return; // Skip empty parts
-                        
-                        if (index === parts.length - 1) {
-                            // It's a file
-                            if (!zip.files[path].dir) {
-                                current[part] = { type: 'file', name: part };
-                                fileCount++;
-                            }
-                        } else {
-                            // It's a folder
-                            if (!current[part]) {
-                                current[part] = { type: 'folder', name: part, children: {} };
-                            }
-                            current = current[part].children;
-                        }
-                    });
+            // Unsubscribe from messages
+            if (messagesUnsubscribe) {
+                messagesUnsubscribe();
+                messagesUnsubscribe = null;
+            }
+            
+            // Clear chat messages
+            document.getElementById('chatMessages').innerHTML = '';
+        }
+
+        // Load messages from database
+        function loadMessages() {
+            const messagesRef = collection(db, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'asc'), limit(50));
+            
+            messagesUnsubscribe = onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === 'added') {
+                        const messageData = change.doc.data();
+                        displayMessage(messageData);
+                    }
                 });
                 
-                fileStructure = buildStructureString(structure);
-                
-            } catch (error) {
-                throw new Error('Unable to extract archive. Please ensure it\'s a valid ZIP file.');
-            }
-        }
-
-        function buildStructureString(structure, indent = 0) {
-            let result = '';
-            const indentStr = '  '.repeat(indent);
-            
-            // Sort items: folders first, then files
-            const items = Object.values(structure).sort((a, b) => {
-                if (a.type === 'folder' && b.type === 'file') return -1;
-                if (a.type === 'file' && b.type === 'folder') return 1;
-                return a.name.localeCompare(b.name);
-            });
-            
-            items.forEach(item => {
-                if (item.type === 'folder') {
-                    result += `${indentStr}${getFileIcon(item.name, true)} ${item.name}\n`;
-                    if (item.children && Object.keys(item.children).length > 0) {
-                        result += buildStructureString(item.children, indent + 1);
-                    }
-                } else {
-                    result += `${indentStr}${getFileIcon(item.name)} ${item.name}\n`;
-                }
-            });
-            
-            return result;
-        }
-
-        async function loadJSZip() {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-                script.onload = () => resolve(window.JSZip);
-                script.onerror = reject;
-                document.head.appendChild(script);
+                scrollToBottom();
+                updateOnlineCount();
             });
         }
 
-        function showProcessing() {
-            document.getElementById('processing').classList.remove('hidden');
-            document.getElementById('resultsSection').classList.add('hidden');
+        // Display message in chat
+        function displayMessage(messageData) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            const isOwn = messageData.userId === currentUser.uid;
+            
+            messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            
+            const timeString = messageData.timestamp 
+                ? new Date(messageData.timestamp.toDate()).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+                : 'Now';
+            
+            const avatarUrl = messageData.photoURL || `https://github.com/identicons/${messageData.userId}.png`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    ${!isOwn ? `<img class="message-avatar" src="${avatarUrl}" alt="Avatar">` : ''}
+                    <span>${isOwn ? 'You' : escapeHtml(messageData.username)}</span>
+                </div>
+                <div class="message-content">${escapeHtml(messageData.message)}</div>
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
         }
 
-        function showResults() {
-            document.getElementById('processing').classList.add('hidden');
-            document.getElementById('resultsSection').classList.remove('hidden');
-            document.getElementById('outputContainer').textContent = fileStructure;
-            document.getElementById('fileCount').textContent = `${fileCount} items`;
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        function showError(message) {
-            document.getElementById('processing').classList.add('hidden');
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.textContent = message;
-            document.querySelector('.upload-section').appendChild(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function downloadResult() {
-            const blob = new Blob([fileStructure], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'file-structure.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        async function copyToClipboard() {
+        // Update online user count (simplified version)
+        async function updateOnlineCount() {
             try {
-                await navigator.clipboard.writeText(fileStructure);
-                const successDiv = document.createElement('div');
-                successDiv.className = 'success';
-                successDiv.textContent = 'Copied to clipboard!';
-                document.getElementById('resultsSection').appendChild(successDiv);
-                setTimeout(() => successDiv.remove(), 3000);
+                const messagesRef = collection(db, 'messages');
+                const recentMessages = query(
+                    messagesRef, 
+                    orderBy('timestamp', 'desc'), 
+                    limit(10)
+                );
+                const snapshot = await getDocs(recentMessages);
+                const uniqueUsers = new Set();
+                snapshot.forEach(doc => {
+                    uniqueUsers.add(doc.data().userId);
+                });
+                document.getElementById('onlineCount').textContent = uniqueUsers.size;
             } catch (error) {
-                console.error('Failed to copy to clipboard:', error);
+                console.error('Error updating online count:', error);
             }
         }
+
+        // Chat form handler
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const messageInput = document.getElementById('chatInput');
+            const messageText = messageInput.value.trim();
+            
+            if (!messageText || !currentUser) return;
+            
+            try {
+                await addDoc(collection(db, 'messages'), {
+                    message: messageText,
+                    username: currentUser.displayName || currentUser.email,
+                    userId: currentUser.uid,
+                    photoURL: currentUser.photoURL,
+                    timestamp: serverTimestamp()
+                });
+                
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
+        });
+
+        // Handle Enter key for sending messages
+        document.getElementById('chatInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Auto-resize textarea
+        document.getElementById('chatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+
+        // Logout function
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        };
     </script>
 </body>
 </html>
