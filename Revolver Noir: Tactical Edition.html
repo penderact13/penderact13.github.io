@@ -1,0 +1,771 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revolver Noir: Tactical Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Special+Elite&display=swap');
+        
+        body {
+            font-family: 'Playfair Display', serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        
+        .noir-title {
+            font-family: 'Special Elite', cursive;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .revolver {
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .revolver:hover {
+            transform: scale(1.05);
+        }
+        
+        .chamber {
+            transition: all 0.3s ease;
+        }
+        
+        .chamber.loaded {
+            background-color: #b91c1c;
+        }
+        
+        .rain {
+            position: absolute;
+            width: 2px;
+            background-color: rgba(255, 255, 255, 0.3);
+            top: -100px;
+            animation: rain-fall linear infinite;
+        }
+        
+        @keyframes rain-fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+        
+        .film-grain::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.1'/%3E%3C/svg%3E");
+            pointer-events: none;
+            opacity: 0.08;
+            z-index: 100;
+        }
+        
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: 0 0 200px rgba(0, 0, 0, 0.9) inset;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        .typewriter {
+            overflow: hidden;
+            border-right: 0.15em solid #e0e0e0;
+            white-space: nowrap;
+            margin: 0 auto;
+            letter-spacing: 0.1em;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #e0e0e0 }
+        }
+        
+        .btn-noir {
+            transition: all 0.3s ease;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+        }
+        
+        .btn-noir:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal {
+            backdrop-filter: blur(5px);
+        }
+        
+        .health-bar {
+            height: 15px;
+            border-radius: 7px;
+            overflow: hidden;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.5) inset;
+        }
+        
+        .health-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            background: linear-gradient(90deg, #b91c1c, #ef4444);
+        }
+        
+        .action-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .buff-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body class="film-grain">
+    <div class="vignette"></div>
+    
+    <!-- Rain Effect -->
+    <div id="rain-container"></div>
+    
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        <!-- Game Title -->
+        <h1 class="noir-title text-4xl md:text-6xl mb-6 text-center text-gray-100">REVOLVER NOIR</h1>
+        <h2 class="text-xl text-amber-400 -mt-4 mb-6">Tactical Edition</h2>
+        
+        <!-- Game Container -->
+        <div class="max-w-4xl w-full bg-gray-900 rounded-lg shadow-2xl p-6 md:p-8 border border-gray-800 relative overflow-hidden">
+            <!-- Health Bars -->
+            <div class="flex justify-between mb-6">
+                <div class="w-5/12">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-gray-300">You</span>
+                        <span id="player-hp-text" class="text-gray-300">3/3</span>
+                    </div>
+                    <div class="health-bar bg-gray-700">
+                        <div id="player-health" class="health-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-2">
+                    <div id="player-buffs" class="flex items-center"></div>
+                    <div class="text-center text-gray-400">VS</div>
+                    <div id="opponent-buffs" class="flex items-center"></div>
+                </div>
+                
+                <div class="w-5/12">
+                    <div class="flex justify-between mb-1">
+                        <span id="opponent-hp-text" class="text-gray-300">3/3</span>
+                        <span class="text-gray-300">Opponent</span>
+                    </div>
+                    <div class="health-bar bg-gray-700">
+                        <div id="opponent-health" class="health-fill" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Narrative Text -->
+            <div id="narrative" class="mb-6 text-lg text-gray-300 leading-relaxed">
+                <p class="typewriter mb-4">The rain falls heavily outside. Another night in this godforsaken city.</p>
+                <p class="mb-4">You find yourself in a standoff with a shadowy figure. Only one of you will walk away tonight.</p>
+                <p>The revolver sits heavy in your hand. Time to make your move, detective.</p>
+            </div>
+            
+            <!-- Game Status -->
+            <div id="game-status" class="mb-6 text-xl font-semibold text-center text-amber-400"></div>
+            
+            <!-- Revolver Visualization -->
+            <div class="flex justify-center mb-8">
+                <div class="revolver relative">
+                    <svg width="200" height="200" viewBox="0 0 200 200" class="mx-auto">
+                        <circle cx="100" cy="100" r="80" fill="#333" stroke="#555" stroke-width="2" />
+                        <circle cx="100" cy="100" r="60" fill="#222" stroke="#444" stroke-width="2" />
+                        <g id="chambers">
+                            <circle class="chamber" id="chamber-1" cx="100" cy="40" r="12" fill="#444" stroke="#666" stroke-width="2" />
+                            <circle class="chamber" id="chamber-2" cx="148" cy="65" r="12" fill="#444" stroke="#666" stroke-width="2" />
+                            <circle class="chamber" id="chamber-3" cx="148" cy="135" r="12" fill="#444" stroke="#666" stroke-width="2" />
+                            <circle class="chamber" id="chamber-4" cx="100" cy="160" r="12" fill="#444" stroke="#666" stroke-width="2" />
+                            <circle class="chamber" id="chamber-5" cx="52" cy="135" r="12" fill="#444" stroke="#666" stroke-width="2" />
+                            <circle class="chamber" id="chamber-6" cx="52" cy="65" r="12" fill="#444" stroke="#666" stroke-width="2" />
+                        </g>
+                        <rect x="95" y="100" width="80" height="20" fill="#555" rx="5" />
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Setup Controls -->
+            <div id="setup-controls" class="flex flex-col md:flex-row justify-center gap-4 mb-6">
+                <button id="load-btn" class="btn-noir bg-red-900 hover:bg-red-800 text-white py-3 px-6 rounded-md font-semibold">LOAD CHAMBER</button>
+                <button id="spin-btn" class="btn-noir bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-md font-semibold">SPIN CYLINDER</button>
+                <button id="start-btn" class="btn-noir bg-amber-900 hover:bg-amber-800 text-white py-3 px-6 rounded-md font-semibold">START DUEL</button>
+            </div>
+            
+            <!-- Action Controls -->
+            <div id="action-controls" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 hidden">
+                <button id="shoot-btn" class="action-btn bg-red-900 hover:bg-red-800 text-white py-3 px-4 rounded-md font-semibold">
+                    <div class="flex flex-col items-center">
+                        <span>SHOOT</span>
+                        <span class="text-xs text-gray-300 mt-1">Standard attack</span>
+                    </div>
+                </button>
+                <button id="aim-btn" class="action-btn bg-blue-900 hover:bg-blue-800 text-white py-3 px-4 rounded-md font-semibold">
+                    <div class="flex flex-col items-center">
+                        <span>AIM</span>
+                        <span class="text-xs text-gray-300 mt-1">+50% damage next shot</span>
+                    </div>
+                </button>
+                <button id="cover-btn" class="action-btn bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-md font-semibold">
+                    <div class="flex flex-col items-center">
+                        <span>COVER</span>
+                        <span class="text-xs text-gray-300 mt-1">50% damage reduction</span>
+                    </div>
+                </button>
+                <button id="heal-btn" class="action-btn bg-green-900 hover:bg-green-800 text-white py-3 px-4 rounded-md font-semibold">
+                    <div class="flex flex-col items-center">
+                        <span>HEAL</span>
+                        <span class="text-xs text-gray-300 mt-1">Restore 1 HP (once per duel)</span>
+                    </div>
+                </button>
+            </div>
+            
+            <!-- Game Stats -->
+            <div class="flex justify-between text-sm text-gray-400 border-t border-gray-700 pt-4">
+                <div>Duels: <span id="rounds">0</span></div>
+                <div>Wins: <span id="wins">0</span></div>
+                <div>Losses: <span id="losses">0</span></div>
+            </div>
+        </div>
+        
+        <!-- Instructions Button -->
+        <button id="instructions-btn" class="mt-6 text-gray-400 hover:text-gray-200 underline">How to Play</button>
+    </div>
+    
+    <!-- Instructions Modal -->
+    <div id="instructions-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal hidden">
+        <div class="bg-gray-900 p-8 max-w-lg rounded-lg border border-gray-700 shadow-2xl">
+            <h2 class="noir-title text-2xl mb-4 text-amber-400">HOW TO PLAY</h2>
+            <h3 class="text-lg mb-2 text-gray-200">Setup:</h3>
+            <ol class="list-decimal pl-5 mb-4 space-y-1 text-gray-300">
+                <li>Click "LOAD CHAMBER" to load a single bullet into the revolver.</li>
+                <li>Click "SPIN CYLINDER" to randomize the bullet position.</li>
+                <li>Click "START DUEL" to begin the standoff.</li>
+            </ol>
+            
+            <h3 class="text-lg mb-2 text-gray-200">Actions:</h3>
+            <ul class="list-disc pl-5 mb-6 space-y-2 text-gray-300">
+                <li><strong>SHOOT</strong> - Pull the trigger. If the chamber has a bullet, deal 1 damage.</li>
+                <li><strong>AIM</strong> - Take careful aim. Your next shot will deal 2 damage instead of 1.</li>
+                <li><strong>COVER</strong> - Take cover. Reduce incoming damage by 50% for one turn.</li>
+                <li><strong>HEAL</strong> - Patch yourself up. Restore 1 HP (can only be used once per duel).</li>
+            </ul>
+            
+            <p class="mb-4 text-gray-300">Both you and your opponent start with 3 HP. The first to reduce the other's HP to zero wins the duel.</p>
+            
+            <div class="text-center">
+                <button id="close-instructions" class="btn-noir bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-md">CLOSE</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 modal hidden">
+        <div class="bg-gray-900 p-8 max-w-lg rounded-lg border border-gray-700 shadow-2xl">
+            <h2 class="noir-title text-2xl mb-4 text-center" id="result-title"></h2>
+            <p id="result-message" class="mb-6 text-gray-300 text-center"></p>
+            <div class="text-center">
+                <button id="play-again" class="btn-noir bg-amber-900 hover:bg-amber-800 text-white py-2 px-6 rounded-md">PLAY AGAIN</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game variables
+            let bulletPosition = -1;
+            let currentPosition = 0;
+            let isLoaded = false;
+            let isSpun = false;
+            let gameActive = false;
+            let playerTurn = true;
+            let rounds = 0;
+            let wins = 0;
+            let losses = 0;
+            
+            // Health and buffs
+            const MAX_HP = 3;
+            let playerHP = MAX_HP;
+            let opponentHP = MAX_HP;
+            let playerAiming = false;
+            let opponentAiming = false;
+            let playerCovered = false;
+            let opponentCovered = false;
+            let playerHealUsed = false;
+            let opponentHealUsed = false;
+            
+            // DOM elements
+            const chambers = document.querySelectorAll('.chamber');
+            const loadBtn = document.getElementById('load-btn');
+            const spinBtn = document.getElementById('spin-btn');
+            const startBtn = document.getElementById('start-btn');
+            const setupControls = document.getElementById('setup-controls');
+            const actionControls = document.getElementById('action-controls');
+            const shootBtn = document.getElementById('shoot-btn');
+            const aimBtn = document.getElementById('aim-btn');
+            const coverBtn = document.getElementById('cover-btn');
+            const healBtn = document.getElementById('heal-btn');
+            const gameStatus = document.getElementById('game-status');
+            const playerHealth = document.getElementById('player-health');
+            const opponentHealth = document.getElementById('opponent-health');
+            const playerHPText = document.getElementById('player-hp-text');
+            const opponentHPText = document.getElementById('opponent-hp-text');
+            const playerBuffs = document.getElementById('player-buffs');
+            const opponentBuffs = document.getElementById('opponent-buffs');
+            const roundsDisplay = document.getElementById('rounds');
+            const winsDisplay = document.getElementById('wins');
+            const lossesDisplay = document.getElementById('losses');
+            const instructionsBtn = document.getElementById('instructions-btn');
+            const instructionsModal = document.getElementById('instructions-modal');
+            const closeInstructionsBtn = document.getElementById('close-instructions');
+            const gameOverModal = document.getElementById('game-over-modal');
+            const resultTitle = document.getElementById('result-title');
+            const resultMessage = document.getElementById('result-message');
+            const playAgainBtn = document.getElementById('play-again');
+            
+            // Create rain effect
+            createRaindrops();
+            
+            // Initial game status
+            updateGameStatus("Load a bullet and spin the cylinder to begin.");
+            
+            // Event listeners
+            loadBtn.addEventListener('click', loadBullet);
+            spinBtn.addEventListener('click', spinCylinder);
+            startBtn.addEventListener('click', startDuel);
+            shootBtn.addEventListener('click', () => performAction('shoot'));
+            aimBtn.addEventListener('click', () => performAction('aim'));
+            coverBtn.addEventListener('click', () => performAction('cover'));
+            healBtn.addEventListener('click', () => performAction('heal'));
+            instructionsBtn.addEventListener('click', showInstructions);
+            closeInstructionsBtn.addEventListener('click', closeInstructions);
+            playAgainBtn.addEventListener('click', resetGame);
+            
+            // Game functions
+            function loadBullet() {
+                if (gameActive) return;
+                
+                if (!isLoaded) {
+                    bulletPosition = 0;
+                    chambers[0].classList.add('loaded');
+                    isLoaded = true;
+                    updateGameStatus("Bullet loaded. Spin the cylinder.");
+                    spinBtn.focus();
+                } else {
+                    updateGameStatus("The revolver is already loaded.");
+                }
+            }
+            
+            function spinCylinder() {
+                if (gameActive) return;
+                
+                if (!isLoaded) {
+                    updateGameStatus("Load a bullet first.");
+                    return;
+                }
+                
+                // Clear previous bullet
+                chambers[bulletPosition].classList.remove('loaded');
+                
+                // Animate spinning
+                let spins = 0;
+                const maxSpins = 10;
+                const spinInterval = setInterval(() => {
+                    chambers[currentPosition].classList.remove('loaded');
+                    currentPosition = (currentPosition + 1) % 6;
+                    chambers[currentPosition].classList.add('loaded');
+                    
+                    spins++;
+                    if (spins >= maxSpins) {
+                        clearInterval(spinInterval);
+                        chambers[currentPosition].classList.remove('loaded');
+                        bulletPosition = Math.floor(Math.random() * 6);
+                        isSpun = true;
+                        updateGameStatus("Cylinder spun. Ready to start the duel.");
+                        startBtn.focus();
+                    }
+                }, 100);
+            }
+            
+            function startDuel() {
+                if (!isLoaded || !isSpun) {
+                    updateGameStatus("Load and spin the cylinder first.");
+                    return;
+                }
+                
+                gameActive = true;
+                playerTurn = Math.random() < 0.5; // Randomly decide who goes first
+                
+                // Switch from setup to action controls
+                setupControls.classList.add('hidden');
+                actionControls.classList.remove('hidden');
+                
+                updateGameStatus(playerTurn ? 
+                    "The duel begins. It's your turn." : 
+                    "The duel begins. Your opponent goes first.");
+                
+                updateActionButtons();
+                
+                if (!playerTurn) {
+                    setTimeout(opponentTurn, 1500);
+                }
+            }
+            
+            function performAction(action) {
+                if (!gameActive || !playerTurn) return;
+                
+                switch(action) {
+                    case 'shoot':
+                        shoot(true);
+                        break;
+                    case 'aim':
+                        playerAiming = true;
+                        addBuff('player', 'aim');
+                        updateGameStatus("You take careful aim. Your next shot will be more effective.");
+                        endTurn();
+                        break;
+                    case 'cover':
+                        playerCovered = true;
+                        addBuff('player', 'cover');
+                        updateGameStatus("You take cover, reducing incoming damage.");
+                        endTurn();
+                        break;
+                    case 'heal':
+                        if (playerHP < MAX_HP && !playerHealUsed) {
+                            playerHP = Math.min(MAX_HP, playerHP + 1);
+                            playerHealUsed = true;
+                            updateHealth();
+                            updateGameStatus("You quickly patch yourself up, restoring some health.");
+                            endTurn();
+                        } else if (playerHealUsed) {
+                            updateGameStatus("You've already used your medical supplies.");
+                        } else {
+                            updateGameStatus("You're already at full health.");
+                        }
+                        break;
+                }
+                
+                updateActionButtons();
+            }
+            
+            function shoot(isPlayer) {
+                const shooter = isPlayer ? "You" : "Your opponent";
+                
+                if (currentPosition === bulletPosition) {
+                    // Bullet fired
+                    chambers[currentPosition].classList.add('loaded');
+                    
+                    let damage = 1;
+                    if (isPlayer && playerAiming) {
+                        damage = 2;
+                        playerAiming = false;
+                        removeBuff('player', 'aim');
+                    } else if (!isPlayer && opponentAiming) {
+                        damage = 2;
+                        opponentAiming = false;
+                        removeBuff('opponent', 'aim');
+                    }
+                    
+                    // Apply damage reduction if target is covered
+                    if (isPlayer && opponentCovered) {
+                        damage = Math.ceil(damage / 2);
+                        opponentCovered = false;
+                        removeBuff('opponent', 'cover');
+                    } else if (!isPlayer && playerCovered) {
+                        damage = Math.ceil(damage / 2);
+                        playerCovered = false;
+                        removeBuff('player', 'cover');
+                    }
+                    
+                    // Apply damage
+                    if (isPlayer) {
+                        opponentHP = Math.max(0, opponentHP - damage);
+                    } else {
+                        playerHP = Math.max(0, playerHP - damage);
+                    }
+                    
+                    updateHealth();
+                    updateGameStatus(`${shooter} fired! The bullet hit for ${damage} damage.`);
+                    
+                    // Reset bullet position and advance cylinder
+                    bulletPosition = -1;
+                    currentPosition = (currentPosition + 1) % 6;
+                    
+                    // Check for game over
+                    if (playerHP <= 0 || opponentHP <= 0) {
+                        setTimeout(() => endGame(opponentHP <= 0), 1000);
+                        return;
+                    }
+                    
+                    // Load a new bullet after a shot
+                    setTimeout(() => {
+                        bulletPosition = currentPosition;
+                        updateGameStatus("A new bullet is loaded into the chamber.");
+                        endTurn();
+                    }, 1500);
+                } else {
+                    // Empty chamber - click
+                    updateGameStatus(`${shooter} pulled the trigger. Click! Empty chamber.`);
+                    currentPosition = (currentPosition + 1) % 6;
+                    endTurn();
+                }
+            }
+            
+            function opponentTurn() {
+                if (!gameActive || playerTurn) return;
+                
+                // Simple AI for opponent
+                let action = 'shoot';
+                
+                // If low health and heal not used, consider healing
+                if (opponentHP === 1 && !opponentHealUsed && Math.random() < 0.7) {
+                    action = 'heal';
+                }
+                // If at full health, consider aiming or covering
+                else if (opponentHP === MAX_HP) {
+                    if (Math.random() < 0.4) {
+                        action = 'aim';
+                    } else if (Math.random() < 0.3) {
+                        action = 'cover';
+                    }
+                }
+                // Otherwise, mix of strategies
+                else {
+                    const rand = Math.random();
+                    if (rand < 0.2 && !opponentAiming) {
+                        action = 'aim';
+                    } else if (rand < 0.4) {
+                        action = 'cover';
+                    }
+                }
+                
+                // Perform the selected action
+                switch(action) {
+                    case 'shoot':
+                        shoot(false);
+                        break;
+                    case 'aim':
+                        opponentAiming = true;
+                        addBuff('opponent', 'aim');
+                        updateGameStatus("Your opponent takes careful aim.");
+                        endTurn();
+                        break;
+                    case 'cover':
+                        opponentCovered = true;
+                        addBuff('opponent', 'cover');
+                        updateGameStatus("Your opponent takes cover.");
+                        endTurn();
+                        break;
+                    case 'heal':
+                        if (opponentHP < MAX_HP && !opponentHealUsed) {
+                            opponentHP = Math.min(MAX_HP, opponentHP + 1);
+                            opponentHealUsed = true;
+                            updateHealth();
+                            updateGameStatus("Your opponent quickly patches up.");
+                            endTurn();
+                        } else {
+                            shoot(false); // Fallback to shooting
+                        }
+                        break;
+                }
+            }
+            
+            function endTurn() {
+                playerTurn = !playerTurn;
+                updateActionButtons();
+                
+                if (!playerTurn) {
+                    setTimeout(opponentTurn, 1500);
+                }
+            }
+            
+            function updateHealth() {
+                playerHealth.style.width = `${(playerHP / MAX_HP) * 100}%`;
+                opponentHealth.style.width = `${(opponentHP / MAX_HP) * 100}%`;
+                playerHPText.textContent = `${playerHP}/${MAX_HP}`;
+                opponentHPText.textContent = `${opponentHP}/${MAX_HP}`;
+            }
+            
+            function addBuff(target, type) {
+                const buffContainer = target === 'player' ? playerBuffs : opponentBuffs;
+                const buffId = `${target}-${type}-buff`;
+                
+                // Remove existing buff of same type
+                const existingBuff = document.getElementById(buffId);
+                if (existingBuff) {
+                    existingBuff.remove();
+                }
+                
+                const buff = document.createElement('div');
+                buff.id = buffId;
+                buff.className = 'buff-icon pulse';
+                
+                switch(type) {
+                    case 'aim':
+                        buff.className += ' bg-blue-800 text-blue-200';
+                        buff.innerHTML = '🎯';
+                        buff.title = 'Aiming: Next shot deals double damage';
+                        break;
+                    case 'cover':
+                        buff.className += ' bg-gray-700 text-gray-200';
+                        buff.innerHTML = '🛡️';
+                        buff.title = 'Covered: 50% damage reduction';
+                        break;
+                }
+                
+                buffContainer.appendChild(buff);
+            }
+            
+            function removeBuff(target, type) {
+                const buffId = `${target}-${type}-buff`;
+                const buff = document.getElementById(buffId);
+                if (buff) {
+                    buff.remove();
+                }
+            }
+            
+            function updateActionButtons() {
+                // Enable/disable buttons based on turn and state
+                const isPlayerTurn = playerTurn && gameActive;
+                
+                shootBtn.disabled = !isPlayerTurn;
+                aimBtn.disabled = !isPlayerTurn || playerAiming;
+                coverBtn.disabled = !isPlayerTurn || playerCovered;
+                healBtn.disabled = !isPlayerTurn || playerHealUsed || playerHP === MAX_HP;
+            }
+            
+            function endGame(playerWon) {
+                gameActive = false;
+                rounds++;
+                roundsDisplay.textContent = rounds;
+                
+                if (playerWon) {
+                    wins++;
+                    winsDisplay.textContent = wins;
+                    resultTitle.textContent = "YOU SURVIVED";
+                    resultTitle.className = "noir-title text-2xl mb-4 text-center text-green-400";
+                    resultMessage.textContent = "Your opponent wasn't so lucky. The streets are a little safer tonight.";
+                } else {
+                    losses++;
+                    lossesDisplay.textContent = losses;
+                    resultTitle.textContent = "YOU'RE DEAD";
+                    resultTitle.className = "noir-title text-2xl mb-4 text-center text-red-500";
+                    resultMessage.textContent = "The bullet found its mark. Another detective lost to the darkness of this city.";
+                }
+                
+                gameOverModal.classList.remove('hidden');
+            }
+            
+            function resetGame() {
+                // Reset game state
+                bulletPosition = -1;
+                currentPosition = 0;
+                isLoaded = false;
+                isSpun = false;
+                gameActive = false;
+                playerTurn = true;
+                
+                // Reset health and buffs
+                playerHP = MAX_HP;
+                opponentHP = MAX_HP;
+                playerAiming = false;
+                opponentAiming = false;
+                playerCovered = false;
+                opponentCovered = false;
+                playerHealUsed = false;
+                opponentHealUsed = false;
+                
+                // Reset UI
+                chambers.forEach(chamber => chamber.classList.remove('loaded'));
+                updateHealth();
+                playerBuffs.innerHTML = '';
+                opponentBuffs.innerHTML = '';
+                updateGameStatus("Load a bullet and spin the cylinder to begin.");
+                
+                // Reset controls
+                setupControls.classList.remove('hidden');
+                actionControls.classList.add('hidden');
+                
+                gameOverModal.classList.add('hidden');
+            }
+            
+            function updateGameStatus(message) {
+                gameStatus.textContent = message;
+            }
+            
+            function showInstructions() {
+                instructionsModal.classList.remove('hidden');
+            }
+            
+            function closeInstructions() {
+                instructionsModal.classList.add('hidden');
+            }
+            
+            function createRaindrops() {
+                const rainContainer = document.getElementById('rain-container');
+                const rainCount = 50;
+                
+                for (let i = 0; i < rainCount; i++) {
+                    const raindrop = document.createElement('div');
+                    raindrop.classList.add('rain');
+                    
+                    // Random properties
+                    const duration = Math.random() * 0.5 + 0.7; // 0.7-1.2s
+                    const delay = Math.random() * 2;
+                    const leftPos = Math.random() * 100;
+                    const height = Math.random() * 60 + 20; // 20-80px
+                    
+                    raindrop.style.left = `${leftPos}%`;
+                    raindrop.style.height = `${height}px`;
+                    raindrop.style.animationDuration = `${duration}s`;
+                    raindrop.style.animationDelay = `${delay}s`;
+                    
+                    rainContainer.appendChild(raindrop);
+                }
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9470708fd2e66a3f',t:'MTc0ODQ2MzQ5MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
