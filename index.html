@@ -791,6 +791,7 @@
             where
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+        // 🔥 REPLACE THIS WITH YOUR PROJECT CONFIG
         const firebaseConfig = {
   apiKey: "AIzaSyDsy8TLR5rM8hXx4RCOupMesFTFyAnhP6I",
   authDomain: "mychat-a0c39.firebaseapp.com",
@@ -973,35 +974,40 @@
             const q = query(messagesRef, orderBy('timestamp', 'asc'), limit(50));
             
             messagesUnsubscribe = onSnapshot(q, async (snapshot) => {
-                // Clear existing messages first
-                document.getElementById('chatMessages').innerHTML = '';
-                
                 // Get blocked users and pending blocks for filtering
                 const blockedUsers = await getBlockedUsersList();
                 const pendingBlocks = await getPendingBlocksList();
                 
-                const messages = [];
-                snapshot.forEach((doc) => {
-                    const messageData = doc.data();
-                    messageData.id = doc.id;
+                // Track displayed message IDs to prevent duplicates
+                const displayedMessages = new Set();
+                
+                // Only process new/changed messages, not all messages every time
+                snapshot.docChanges().forEach(async (change) => {
+                    const messageData = change.doc.data();
+                    messageData.id = change.doc.id;
                     
-                    // Skip system messages about clearing (we don't want these!)
+                    // Skip system messages about clearing
                     if (messageData.userId === 'system' && 
                         (messageData.message.includes('cleared by admin') || 
                          messageData.message.includes('All previous messages'))) {
-                        return; // Skip this message
+                        return;
                     }
                     
-                    messages.push(messageData);
-                });
-                
-                // Filter and display messages
-                for (const messageData of messages) {
-                    const shouldHide = await shouldHideMessage(messageData, blockedUsers, pendingBlocks);
-                    if (!shouldHide) {
-                        displayMessage(messageData);
+                    if (change.type === 'added') {
+                        // Check if we should hide this message
+                        const shouldHide = await shouldHideMessage(messageData, blockedUsers, pendingBlocks);
+                        if (!shouldHide && !displayedMessages.has(messageData.id)) {
+                            displayedMessages.add(messageData.id);
+                            displayMessage(messageData);
+                        }
+                    } else if (change.type === 'removed') {
+                        // Remove message from display if it was deleted
+                        const messageElement = document.querySelector(`[data-message-id="${messageData.id}"]`);
+                        if (messageElement) {
+                            messageElement.remove();
+                        }
                     }
-                }
+                });
                 
                 scrollToBottom();
                 updateOnlineCount();
@@ -1118,11 +1124,19 @@
         // Display message in chat
         async function displayMessage(messageData) {
             const chatMessages = document.getElementById('chatMessages');
+            
+            // Check if message already exists to prevent duplicates
+            const existingMessage = document.querySelector(`[data-message-id="${messageData.id}"]`);
+            if (existingMessage) {
+                return; // Message already displayed
+            }
+            
             const messageDiv = document.createElement('div');
             const isOwn = messageData.userId === currentUser.uid;
             const isAdmin = await isCurrentUserAdmin();
             
             messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            messageDiv.setAttribute('data-message-id', messageData.id); // Add unique identifier
             
             const timeString = messageData.timestamp 
                 ? new Date(messageData.timestamp.toDate()).toLocaleTimeString([], {
