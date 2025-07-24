@@ -190,6 +190,200 @@
             transform: translateY(-1px);
         }
 
+        .admin-flag-btn {
+            background: #fb8500;
+            color: white;
+            border: 1px solid #fd9e2d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .admin-flag-btn:hover {
+            background: #e07600;
+            transform: translateY(-1px);
+        }
+
+        .message-flag {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(248, 81, 73, 0.9);
+            color: white;
+            border: none;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message:hover .message-flag {
+            opacity: 1;
+        }
+
+        .message {
+            position: relative;
+            margin-bottom: 1rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+            border: 1px solid #21262d;
+        }
+
+        .moderation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .moderation-modal-content {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: 1rem;
+        }
+
+        .moderation-modal h3 {
+            color: #fb8500;
+            margin-bottom: 1.5rem;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .moderation-section {
+            margin-bottom: 2rem;
+        }
+
+        .moderation-section h4 {
+            color: #f0f6fc;
+            margin-bottom: 1rem;
+            font-size: 16px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 0.5rem;
+        }
+
+        .blocked-user, .pending-block {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .blocked-user {
+            border-left: 3px solid #f85149;
+        }
+
+        .pending-block {
+            border-left: 3px solid #fb8500;
+        }
+
+        .user-info-mod {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-avatar-mod {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .user-name-mod {
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .block-reason {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 8px 0;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            color: #8b949e;
+        }
+
+        .mod-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .mod-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .mod-btn.unblock {
+            background: #238636;
+            color: white;
+        }
+
+        .mod-btn.unblock:hover {
+            background: #2ea043;
+        }
+
+        .mod-btn.block {
+            background: #da3633;
+            color: white;
+        }
+
+        .mod-btn.block:hover {
+            background: #b62324;
+        }
+
+        .mod-btn.keep {
+            background: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+        }
+
+        .mod-btn.keep:hover {
+            background: #30363d;
+        }
+
+        .no-items {
+            text-align: center;
+            color: #8b949e;
+            font-style: italic;
+            padding: 2rem;
+        }
+
         .delete-modal {
             position: fixed;
             top: 0;
@@ -509,6 +703,11 @@
             </div>
             <p class="subtitle">Real-time chat for developers</p>
             
+            <div class="config-placeholder">
+                <strong>⚙️ Setup Required</strong><br>
+                Replace the config object below with your project's configuration
+            </div>
+            
             <div class="welcome-message">
                 <strong>🚀 Sign in with GitHub</strong><br>
                 Click the button below to join the developer chat room using your GitHub account
@@ -540,6 +739,12 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="adminFlagBtn" class="admin-flag-btn" onclick="showModerationPanel()" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 3v18h2v-6h7l1-2-1-2H8V3H6z"/>
+                        </svg>
+                        Moderation
+                    </button>
                     <button id="adminDeleteBtn" class="admin-delete-btn" onclick="showDeleteConfirm()" style="display: none;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
@@ -562,8 +767,49 @@
             </div>
         </div>
 
+        <!-- Moderation Panel Modal -->
+        <div id="moderationModal" class="moderation-modal">
+            <div class="moderation-modal-content">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 3v18h2v-6h7l1-2-1-2H8V3H6z"/>
+                    </svg>
+                    Moderation Panel
+                </h3>
+                
+                <div class="moderation-section">
+                    <h4>🚫 Blocked Users</h4>
+                    <div id="blockedUsersList">
+                        <div class="no-items">No blocked users</div>
+                    </div>
+                </div>
+                
+                <div class="moderation-section">
+                    <h4>⏳ Pending Blocks</h4>
+                    <div id="pendingBlocksList">
+                        <div class="no-items">No pending blocks</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button onclick="hideModerationPanel()" class="delete-cancel-btn">Close</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Delete Confirmation Modal -->
         <div id="deleteModal" class="delete-modal">
+            <div class="delete-modal-content">
+                <h3>⚠️ Nuclear Option</h3>
+                <p>This will <strong>permanently delete ALL messages</strong> in the chat room. This action cannot be undone!</p>
+                <p>Type <code>DELETE-EVERYTHING</code> to confirm:</p>
+                <input type="text" id="deleteConfirmInput" placeholder="DELETE-EVERYTHING">
+                <div class="delete-modal-buttons">
+                    <button id="confirmDeleteBtn" class="delete-confirm-btn" disabled>🗑️ Delete All Messages</button>
+                    <button onclick="hideDeleteConfirm()" class="delete-cancel-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
             <div class="delete-modal-content">
                 <h3>⚠️ Nuclear Option</h3>
                 <p>This will <strong>permanently delete ALL messages</strong> in the chat room. This action cannot be undone!</p>
@@ -598,9 +844,12 @@
             serverTimestamp,
             getDocs,
             deleteDoc,
-            doc
+            doc,
+            setDoc,
+            getDoc,
+            where
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
+        
         const firebaseConfig = {
   apiKey: "AIzaSyDsy8TLR5rM8hXx4RCOupMesFTFyAnhP6I",
   authDomain: "mychat-a0c39.firebaseapp.com",
@@ -700,8 +949,22 @@
         });
 
         // Auth state listener
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // Check if user is blocked before allowing them in
+                const userLogin = user.reloadUserInfo?.screenName || 
+                                 user.providerData?.[0]?.displayName || 
+                                 user.displayName;
+                
+                const isBlocked = await checkIfUserBlocked(userLogin);
+                if (isBlocked && userLogin !== ADMIN_USERNAME) {
+                    // User is blocked, sign them out
+                    await signOut(auth);
+                    document.getElementById('authError').textContent = 'You have been blocked from this chat room.';
+                    document.getElementById('authError').style.display = 'block';
+                    return;
+                }
+                
                 currentUser = user;
                 showChatSection();
             } else {
@@ -719,16 +982,19 @@
             document.getElementById('currentUser').textContent = currentUser.displayName || currentUser.email;
             document.getElementById('userAvatar').src = currentUser.photoURL || `https://github.com/identicons/${currentUser.uid}.png`;
             
-            // Show admin delete button only for admin user
-            const adminBtn = document.getElementById('adminDeleteBtn');
+            // Show admin buttons only for admin user
+            const adminDeleteBtn = document.getElementById('adminDeleteBtn');
+            const adminFlagBtn = document.getElementById('adminFlagBtn');
             const userLogin = currentUser.reloadUserInfo?.screenName || 
                              currentUser.providerData?.[0]?.displayName || 
                              currentUser.displayName;
             
             if (userLogin === ADMIN_USERNAME) {
-                adminBtn.style.display = 'flex';
+                adminDeleteBtn.style.display = 'flex';
+                adminFlagBtn.style.display = 'flex';
             } else {
-                adminBtn.style.display = 'none';
+                adminDeleteBtn.style.display = 'none';
+                adminFlagBtn.style.display = 'none';
             }
             
             // Load messages
@@ -778,6 +1044,9 @@
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             const isOwn = messageData.userId === currentUser.uid;
+            const isAdmin = currentUser.reloadUserInfo?.screenName === ADMIN_USERNAME ||
+                           currentUser.providerData?.[0]?.displayName === ADMIN_USERNAME ||
+                           currentUser.displayName === ADMIN_USERNAME;
             
             messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
             
@@ -790,6 +1059,15 @@
             
             const avatarUrl = messageData.photoURL || `https://github.com/identicons/${messageData.userId}.png`;
             
+            // Add flag button for admin on other users' messages
+            const flagButton = (!isOwn && isAdmin) ? `
+                <button class="message-flag" onclick="flagMessage('${messageData.userId}', '${escapeHtml(messageData.username)}', '${escapeHtml(messageData.message)}', '${avatarUrl}')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 3v18h2v-6h7l1-2-1-2H8V3H6z"/>
+                    </svg>
+                </button>
+            ` : '';
+            
             messageDiv.innerHTML = `
                 <div class="message-header">
                     ${!isOwn ? `<img class="message-avatar" src="${avatarUrl}" alt="Avatar">` : ''}
@@ -797,6 +1075,7 @@
                 </div>
                 <div class="message-content">${escapeHtml(messageData.message)}</div>
                 <div class="message-time">${timeString}</div>
+                ${flagButton}
             `;
             
             chatMessages.appendChild(messageDiv);
@@ -954,6 +1233,192 @@
         document.getElementById('deleteModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 hideDeleteConfirm();
+            }
+        });
+
+        // Moderation functions
+        window.showModerationPanel = async function() {
+            await loadModerationData();
+            document.getElementById('moderationModal').style.display = 'flex';
+        };
+
+        window.hideModerationPanel = function() {
+            document.getElementById('moderationModal').style.display = 'none';
+        };
+
+        // Check if user is blocked
+        async function checkIfUserBlocked(username) {
+            try {
+                const blockDoc = await getDoc(doc(db, 'blocked_users', username));
+                return blockDoc.exists();
+            } catch (error) {
+                console.error('Error checking if user blocked:', error);
+                return false;
+            }
+        }
+
+        // Flag a message for review
+        window.flagMessage = async function(userId, username, message, photoURL) {
+            try {
+                // Create pending block
+                await setDoc(doc(db, 'pending_blocks', userId), {
+                    userId: userId,
+                    username: username,
+                    message: message,
+                    photoURL: photoURL,
+                    timestamp: serverTimestamp(),
+                    flaggedBy: currentUser.displayName || currentUser.email
+                });
+                
+                alert(`Flagged ${username} for review. Check the Moderation panel to approve or dismiss.`);
+            } catch (error) {
+                console.error('Error flagging message:', error);
+                alert('Failed to flag message. Please try again.');
+            }
+        };
+
+        // Block user immediately (admin action)
+        async function blockUser(userId, username, reason = 'Blocked by admin') {
+            try {
+                await setDoc(doc(db, 'blocked_users', username), {
+                    userId: userId,
+                    username: username,
+                    reason: reason,
+                    blockedAt: serverTimestamp(),
+                    blockedBy: currentUser.displayName || currentUser.email
+                });
+                
+                // Remove from pending blocks if exists
+                try {
+                    await deleteDoc(doc(db, 'pending_blocks', userId));
+                } catch (e) {
+                    // Ignore if doesn't exist
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error blocking user:', error);
+                return false;
+            }
+        }
+
+        // Unblock user
+        async function unblockUser(username) {
+            try {
+                await deleteDoc(doc(db, 'blocked_users', username));
+                return true;
+            } catch (error) {
+                console.error('Error unblocking user:', error);
+                return false;
+            }
+        }
+
+        // Dismiss pending block
+        async function dismissPendingBlock(userId) {
+            try {
+                await deleteDoc(doc(db, 'pending_blocks', userId));
+                return true;
+            } catch (error) {
+                console.error('Error dismissing pending block:', error);
+                return false;
+            }
+        }
+
+        // Load moderation data
+        async function loadModerationData() {
+            try {
+                // Load blocked users
+                const blockedSnapshot = await getDocs(collection(db, 'blocked_users'));
+                const blockedList = document.getElementById('blockedUsersList');
+                
+                if (blockedSnapshot.empty) {
+                    blockedList.innerHTML = '<div class="no-items">No blocked users</div>';
+                } else {
+                    let blockedHTML = '';
+                    blockedSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        blockedHTML += `
+                            <div class="blocked-user">
+                                <div class="user-info-mod">
+                                    <img class="user-avatar-mod" src="${data.photoURL || `https://github.com/identicons/${data.userId}.png`}" alt="Avatar">
+                                    <span class="user-name-mod">${escapeHtml(data.username)}</span>
+                                </div>
+                                <div class="block-reason">Reason: ${escapeHtml(data.reason)}</div>
+                                <div class="mod-buttons">
+                                    <button class="mod-btn unblock" onclick="handleUnblock('${data.username}')">Unblock</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    blockedList.innerHTML = blockedHTML;
+                }
+
+                // Load pending blocks
+                const pendingSnapshot = await getDocs(collection(db, 'pending_blocks'));
+                const pendingList = document.getElementById('pendingBlocksList');
+                
+                if (pendingSnapshot.empty) {
+                    pendingList.innerHTML = '<div class="no-items">No pending blocks</div>';
+                } else {
+                    let pendingHTML = '';
+                    pendingSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        pendingHTML += `
+                            <div class="pending-block">
+                                <div class="user-info-mod">
+                                    <img class="user-avatar-mod" src="${data.photoURL || `https://github.com/identicons/${data.userId}.png`}" alt="Avatar">
+                                    <span class="user-name-mod">${escapeHtml(data.username)}</span>
+                                </div>
+                                <div class="block-reason">Flagged message: "${escapeHtml(data.message)}"</div>
+                                <div class="mod-buttons">
+                                    <button class="mod-btn block" onclick="handleBlock('${data.userId}', '${escapeHtml(data.username)}', 'Flagged message: ${escapeHtml(data.message)}')">Block User</button>
+                                    <button class="mod-btn keep" onclick="handleDismiss('${data.userId}')">Keep User</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    pendingList.innerHTML = pendingHTML;
+                }
+            } catch (error) {
+                console.error('Error loading moderation data:', error);
+            }
+        }
+
+        // Handle moderation actions
+        window.handleBlock = async function(userId, username, reason) {
+            const success = await blockUser(userId, username, reason);
+            if (success) {
+                alert(`${username} has been blocked.`);
+                await loadModerationData();
+            } else {
+                alert('Failed to block user. Please try again.');
+            }
+        };
+
+        window.handleUnblock = async function(username) {
+            const success = await unblockUser(username);
+            if (success) {
+                alert(`${username} has been unblocked.`);
+                await loadModerationData();
+            } else {
+                alert('Failed to unblock user. Please try again.');
+            }
+        };
+
+        window.handleDismiss = async function(userId) {
+            const success = await dismissPendingBlock(userId);
+            if (success) {
+                alert('Pending block dismissed.');
+                await loadModerationData();
+            } else {
+                alert('Failed to dismiss. Please try again.');
+            }
+        };
+
+        // Close moderation modal when clicking outside
+        document.getElementById('moderationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideModerationPanel();
             }
         });
     </script>
