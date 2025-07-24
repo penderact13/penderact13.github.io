@@ -973,45 +973,393 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            signInWithPopup,
+            GithubAuthProvider,
+            signOut, 
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            query, 
+            orderBy, 
+            limit, 
+            onSnapshot,
+            serverTimestamp,
+            getDocs,
+            deleteDoc,
+            doc,
+            setDoc,
+            getDoc,
+            where,
+            updateDoc
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDsy8TLR5rM8hXx4RCOupMesFTFyAnhP6I",
+            authDomain: "mychat-a0c39.firebaseapp.com",
+            projectId: "mychat-a0c39",
+            storageBucket: "mychat-a0c39.firebasestorage.app",
+            messagingSenderId: "258621648606",
+            appId: "1:258621648606:web:ee7fe10bb2d70b2d621c4f",
+            measurementId: "G-3KG1YCF0EY"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GithubAuthProvider();
+        
+        // Add GitHub scopes
+        provider.addScope('user:email');
+        provider.addScope('read:user');
+
         // Global variables
         let currentUser = null;
         let activeConversation = null;
         let conversations = new Map();
+        let messagesUnsubscribes = new Map();
+        
+        // Admin username
+        const ADMIN_USERNAME = "penderact13";
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
-            // GitHub login button
-            document.getElementById('githubLoginBtn').addEventListener('click', function() {
-                showMessage('🔧 Firebase Setup Required: Please configure your Firebase project with GitHub authentication to enable login.', 'error');
-            });
-
-            // Message form
-            document.getElementById('messageForm').addEventListener('submit', handleSendMessage);
-
-            // New chat form
-            document.getElementById('newChatForm').addEventListener('submit', handleNewChat);
-
-            // Auto-resize textarea
-            document.getElementById('messageInput').addEventListener('input', function() {
-                adjustTextareaHeight(this);
-            });
-
-            // Search functionality
-            document.getElementById('searchInput').addEventListener('input', handleSearch);
-
-            // Close modal on outside click
-            document.getElementById('newChatModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    hideNewChatModal();
-                }
-            });
-
             console.log('🚀 GitDM - Developer Messaging Platform Loaded');
         });
 
-        // Handle send message
-        function handleSendMessage(e) {
+        // Auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Check if user is blocked
+                const userLogin = user.reloadUserInfo?.screenName || 
+                                 user.providerData?.[0]?.displayName || 
+                                 user.displayName;
+                
+                const isBlocked = await checkIfUserBlocked(userLogin);
+                if (isBlocked && userLogin !== ADMIN_USERNAME) {
+                    await signOut(auth);
+                    showMessage('You have been blocked from this service.', 'error');
+                    return;
+                }
+                
+                currentUser = user;
+                await initializeUser();
+                showMainApp();
+            } else {
+                currentUser = null;
+                showLandingScreen();
+            }
+        });
+
+        // Check if user is blocked
+        async function checkIfUserBlocked(username) {
+            try {
+                const blockDoc = await getDoc(doc(db, 'blocked_users', username));
+                return blockDoc.exists();
+            } catch (error) {
+                console.error('Error checking if user blocked:', error);
+                return false;
+            }
+        }
+
+        // Initialize user data
+        async function initializeUser() {
+            const userLogin = currentUser.reloadUserInfo?.screenName || 
+                             currentUser.providerData?.[0]?.displayName || 
+                             currentUser.displayName;
+
+            // Create/update user document
+            await setDoc(doc(db, 'users', currentUser.uid), {
+                username: userLogin,
+                displayName: currentUser.displayName || userLogin,
+                email: currentUser.email,
+                photoURL: currentUser.photoURL,
+                lastSeen: serverTimestamp(),
+                isOnline: true
+            }, { merge: true });
+
+            // Check if admin
+            if (userLogin === ADMIN_USERNAME) {
+                await setDoc(doc(db, 'admin_users', currentUser.uid), {
+                    username: userLogin,
+                    isAdmin: true,
+                    grantedAt: serverTimestamp()
+                });
+            }
+        }
+
+        // GitHub login handler
+        document.getElementById('githubLoginBtn').addEventListener('click', async function() {
+            const loginBtn = this;
+            const errorDiv = document.getElementById('authError');
+            const successDiv = document.getElementById('authSuccess');
+            
+            clearMessages();
+            
+            loginBtn.innerHTML = `
+                <svg class="github-icon" viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Signing in...
+            `;
+            loginBtn.disabled = true;
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                showMessage('Successfully signed in!', 'success');
+            } catch (error) {
+                console.error('GitHub login error:', error);
+                
+                let errorMessage = 'Failed to sign in with GitHub. Please try again.';
+                
+                switch (error.code) {
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = 'Sign-in popup was closed. Please try again.';
+                        break;
+                    case 'auth/popup-blocked':
+                        errorMessage = 'Popup was blocked by your browser. Please allow popups for this site and try again.';
+                        break;
+                    case 'auth/cancelled-popup-request':
+                        errorMessage = 'Sign-in was cancelled. Please try again.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection.';
+                        break;
+                    case 'auth/unauthorized-domain':
+                        errorMessage = 'This domain is not authorized. Please check your Firebase project settings.';
+                        break;
+                    default:
+                        errorMessage += ` Error: ${error.message}`;
+                }
+                
+                showMessage(errorMessage, 'error');
+            } finally {
+                loginBtn.innerHTML = `
+                    <svg class="github-icon" viewBox="0 0 24 24">
+                        <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    Continue with GitHub
+                `;
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Show main app
+        function showMainApp() {
+            document.getElementById('landingScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'grid';
+            
+            // Set user info in sidebar
+            document.getElementById('currentUserName').textContent = 
+                currentUser.displayName || currentUser.email;
+            document.getElementById('currentUserAvatar').src = 
+                currentUser.photoURL || `https://github.com/identicons/${currentUser.uid}.png`;
+            
+            // Check if admin
+            const userLogin = currentUser.reloadUserInfo?.screenName || 
+                             currentUser.providerData?.[0]?.displayName || 
+                             currentUser.displayName;
+            
+            if (userLogin === ADMIN_USERNAME) {
+                // Show admin features if needed
+                console.log('Admin user logged in');
+            }
+            
+            // Load conversations
+            loadConversations();
+        }
+
+        // Show landing screen
+        function showLandingScreen() {
+            document.getElementById('landingScreen').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+            
+            // Clean up subscriptions
+            messagesUnsubscribes.forEach(unsubscribe => unsubscribe());
+            messagesUnsubscribes.clear();
+        }
+
+        // Load conversations
+        function loadConversations() {
+            const conversationsRef = collection(db, 'conversations');
+            const q = query(
+                conversationsRef, 
+                where('participants', 'array-contains', currentUser.uid),
+                orderBy('lastMessageAt', 'desc')
+            );
+            
+            onSnapshot(q, (snapshot) => {
+                const conversationsList = document.getElementById('conversationsList');
+                conversationsList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    conversationsList.innerHTML = `
+                        <div style="padding: 2rem; text-align: center; color: #8b949e;">
+                            <p>No conversations yet</p>
+                            <p style="font-size: 12px; margin-top: 0.5rem;">Start a new chat with any GitHub developer!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                snapshot.forEach((doc) => {
+                    const conversation = doc.data();
+                    conversation.id = doc.id;
+                    conversations.set(doc.id, conversation);
+                    
+                    const conversationElement = createConversationElement(conversation);
+                    conversationsList.appendChild(conversationElement);
+                });
+            });
+        }
+
+        // Create conversation element
+        function createConversationElement(conversation) {
+            const div = document.createElement('div');
+            div.className = 'conversation-item';
+            div.dataset.conversationId = conversation.id;
+            
+            // Get other participant info
+            const otherParticipant = conversation.participantInfo.find(p => p.uid !== currentUser.uid);
+            const displayName = otherParticipant?.displayName || 'Unknown User';
+            const photoURL = otherParticipant?.photoURL || `https://github.com/identicons/${otherParticipant?.uid || 'default'}.png`;
+            
+            // Format last message time
+            const lastMessageTime = conversation.lastMessageAt 
+                ? formatTime(conversation.lastMessageAt.toDate())
+                : '';
+            
+            // Check for unread messages
+            const unreadCount = conversation.unreadCount?.[currentUser.uid] || 0;
+            
+            div.innerHTML = `
+                <div class="conversation-header">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <img src="${photoURL}" style="width: 32px; height: 32px; border-radius: 50%;" alt="Avatar">
+                        <span class="conversation-name">${escapeHtml(displayName)}</span>
+                    </div>
+                    <span class="conversation-time">${lastMessageTime}</span>
+                </div>
+                <div class="conversation-preview">${escapeHtml(conversation.lastMessage || 'No messages yet')}</div>
+                ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
+            `;
+            
+            div.addEventListener('click', () => openConversation(conversation.id));
+            
+            return div;
+        }
+
+        // Open conversation
+        async function openConversation(conversationId) {
+            // Remove active class from all conversations
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to selected conversation
+            const selectedItem = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('active');
+            }
+            
+            activeConversation = conversationId;
+            const conversation = conversations.get(conversationId);
+            
+            if (!conversation) return;
+            
+            // Get other participant
+            const otherParticipant = conversation.participantInfo.find(p => p.uid !== currentUser.uid);
+            
+            // Update chat header
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('chatUsername').textContent = otherParticipant?.displayName || 'Unknown User';
+            document.getElementById('chatAvatar').src = otherParticipant?.photoURL || 
+                `https://github.com/identicons/${otherParticipant?.uid || 'default'}.png`;
+            
+            // Show message input
+            document.getElementById('messageInputContainer').style.display = 'block';
+            
+            // Hide welcome screen
+            document.querySelector('.welcome-screen').style.display = 'none';
+            
+            // Load messages
+            loadMessages(conversationId);
+            
+            // Mark as read
+            await markAsRead(conversationId);
+        }
+
+        // Load messages for conversation
+        function loadMessages(conversationId) {
+            // Unsubscribe from previous messages
+            if (messagesUnsubscribes.has(conversationId)) {
+                messagesUnsubscribes.get(conversationId)();
+            }
+            
+            const messagesRef = collection(db, 'conversations', conversationId, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'asc'), limit(50));
+            
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const messagesContainer = document.getElementById('messagesContainer');
+                messagesContainer.innerHTML = '';
+                
+                snapshot.forEach((doc) => {
+                    const message = doc.data();
+                    message.id = doc.id;
+                    
+                    const messageElement = createMessageElement(message);
+                    messagesContainer.appendChild(messageElement);
+                });
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            });
+            
+            messagesUnsubscribes.set(conversationId, unsubscribe);
+        }
+
+        // Create message element
+        function createMessageElement(message) {
+            const div = document.createElement('div');
+            div.className = `message ${message.senderId === currentUser.uid ? 'own' : 'other'}`;
+            
+            const senderInfo = message.senderId === currentUser.uid 
+                ? { photoURL: currentUser.photoURL, displayName: 'You' }
+                : { photoURL: message.senderPhotoURL, displayName: message.senderName };
+            
+            const timeString = message.timestamp 
+                ? formatTime(message.timestamp.toDate())
+                : 'Now';
+            
+            div.innerHTML = `
+                <img class="message-avatar" src="${senderInfo.photoURL || `https://github.com/identicons/${message.senderId}.png`}" alt="Avatar">
+                <div class="message-content">
+                    <div class="message-text">${escapeHtml(message.text)}</div>
+                    <div class="message-time">${timeString}</div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        // Mark conversation as read
+        async function markAsRead(conversationId) {
+            const conversationRef = doc(db, 'conversations', conversationId);
+            await updateDoc(conversationRef, {
+                [`unreadCount.${currentUser.uid}`]: 0
+            });
+        }
+
+        // Send message
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if (!activeConversation || !currentUser) {
@@ -1024,12 +1372,48 @@
             
             if (!messageText) return;
             
-            // Real implementation would send to Firebase here
-            showMessage('Message sending requires Firebase configuration.', 'error');
+            try {
+                // Add message to conversation
+                const messagesRef = collection(db, 'conversations', activeConversation, 'messages');
+                await addDoc(messagesRef, {
+                    text: messageText,
+                    senderId: currentUser.uid,
+                    senderName: currentUser.displayName || currentUser.email,
+                    senderPhotoURL: currentUser.photoURL,
+                    timestamp: serverTimestamp()
+                });
+                
+                // Update conversation last message
+                const conversation = conversations.get(activeConversation);
+                const otherParticipantId = conversation.participants.find(id => id !== currentUser.uid);
+                
+                await updateDoc(doc(db, 'conversations', activeConversation), {
+                    lastMessage: messageText,
+                    lastMessageAt: serverTimestamp(),
+                    [`unreadCount.${otherParticipantId}`]: (conversation.unreadCount?.[otherParticipantId] || 0) + 1
+                });
+                
+                messageInput.value = '';
+                adjustTextareaHeight(messageInput);
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showMessage('Failed to send message. Please try again.', 'error');
+            }
+        });
+
+        // Auto-resize textarea
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
         }
 
-        // Handle new chat
-        function handleNewChat(e) {
+        document.getElementById('messageInput').addEventListener('input', function() {
+            adjustTextareaHeight(this);
+        });
+
+        // New chat functionality
+        document.getElementById('newChatForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             if (!currentUser) {
@@ -1040,25 +1424,72 @@
             const username = document.getElementById('usernameInput').value.trim();
             if (!username) return;
             
-            // Real implementation would create conversation in Firebase here
-            showMessage('Starting new chats requires Firebase configuration.', 'error');
-        }
-
-        // Handle search
-        function handleSearch() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const conversationItems = document.querySelectorAll('.conversation-item');
-            
-            conversationItems.forEach(item => {
-                const name = item.querySelector('.conversation-name')?.textContent?.toLowerCase() || '';
-                const preview = item.querySelector('.conversation-preview')?.textContent?.toLowerCase() || '';
-                
-                if (name.includes(searchTerm) || preview.includes(searchTerm)) {
-                    item.style.display = 'block';
-                } else {
-                    item.style.display = 'none';
+            try {
+                // Check if user exists on GitHub
+                const response = await fetch(`https://api.github.com/users/${username}`);
+                if (!response.ok) {
+                    showMessage('GitHub user not found. Please check the username.', 'error');
+                    return;
                 }
-            });
+                
+                const githubUser = await response.json();
+                
+                // Create or find existing conversation
+                const conversationId = await createConversation(githubUser);
+                hideNewChatModal();
+                
+                // Open the conversation
+                setTimeout(() => openConversation(conversationId), 500);
+                
+            } catch (error) {
+                console.error('Error starting chat:', error);
+                showMessage('Failed to start chat. Please try again.', 'error');
+            }
+        });
+
+        // Create conversation
+        async function createConversation(githubUser) {
+            // Check if conversation already exists
+            const existingConversations = await getDocs(query(
+                collection(db, 'conversations'),
+                where('participants', 'array-contains', currentUser.uid)
+            ));
+            
+            for (const doc of existingConversations.docs) {
+                const conv = doc.data();
+                if (conv.participants.includes(githubUser.id.toString())) {
+                    return doc.id;
+                }
+            }
+            
+            // Create new conversation
+            const conversationData = {
+                participants: [currentUser.uid, githubUser.id.toString()],
+                participantInfo: [
+                    {
+                        uid: currentUser.uid,
+                        displayName: currentUser.displayName || currentUser.email,
+                        photoURL: currentUser.photoURL,
+                        username: currentUser.reloadUserInfo?.screenName || currentUser.displayName
+                    },
+                    {
+                        uid: githubUser.id.toString(),
+                        displayName: githubUser.name || githubUser.login,
+                        photoURL: githubUser.avatar_url,
+                        username: githubUser.login
+                    }
+                ],
+                createdAt: serverTimestamp(),
+                lastMessage: '',
+                lastMessageAt: serverTimestamp(),
+                unreadCount: {
+                    [currentUser.uid]: 0,
+                    [githubUser.id.toString()]: 0
+                }
+            };
+            
+            const docRef = await addDoc(collection(db, 'conversations'), conversationData);
+            return docRef.id;
         }
 
         // Modal functions
@@ -1083,25 +1514,120 @@
         };
 
         // Logout function
-        window.logout = function() {
-            if (!currentUser) {
-                showMessage('You are not signed in.', 'error');
-                return;
+        window.logout = async function() {
+            try {
+                // Set user as offline
+                if (currentUser) {
+                    await updateDoc(doc(db, 'users', currentUser.uid), {
+                        isOnline: false,
+                        lastSeen: serverTimestamp()
+                    });
+                }
+                
+                await signOut(auth);
+            } catch (error) {
+                console.error('Logout error:', error);
             }
-            
-            currentUser = null;
-            activeConversation = null;
-            conversations.clear();
-            
-            document.getElementById('landingScreen').style.display = 'flex';
-            document.getElementById('appContainer').style.display = 'none';
-            
-            showMessage('Signed out successfully!', 'success');
         };
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const conversationItems = document.querySelectorAll('.conversation-item');
+            
+            conversationItems.forEach(item => {
+                const name = item.querySelector('.conversation-name')?.textContent?.toLowerCase() || '';
+                const preview = item.querySelector('.conversation-preview')?.textContent?.toLowerCase() || '';
+                
+                if (name.includes(searchTerm) || preview.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('newChatModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideNewChatModal();
+            }
+        });
 
         // Utility functions
         function formatTime(date) {
             const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else if (now - date < 7 * 24 * 60 * 60 * 1000) {
+                return date.toLocaleDateString([], { weekday: 'short' });
+            } else {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearMessages() {
+            document.getElementById('authError').style.display = 'none';
+            document.getElementById('authSuccess').style.display = 'none';
+        }
+
+        function showMessage(text, type) {
+            const errorDiv = document.getElementById('authError');
+            const successDiv = document.getElementById('authSuccess');
+            
+            clearMessages();
+            
+            if (type === 'error') {
+                errorDiv.textContent = text;
+                errorDiv.style.display = 'block';
+            } else {
+                successDiv.textContent = text;
+                successDiv.style.display = 'block';
+            }
+            
+            setTimeout(() => {
+                clearMessages();
+            }, 5000);
+        }
+
+        // Handle mobile responsiveness
+        function handleResize() {
+            if (window.innerWidth <= 768) {
+                const mobileBtn = document.querySelector('.mobile-menu-btn');
+                if (mobileBtn) mobileBtn.style.display = 'block';
+            } else {
+                const mobileBtn = document.querySelector('.mobile-menu-btn');
+                if (mobileBtn) mobileBtn.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('load', handleResize);
+
+        // Set user offline when page unloads
+        window.addEventListener('beforeunload', async () => {
+            if (currentUser) {
+                await updateDoc(doc(db, 'users', currentUser.uid), {
+                    isOnline: false,
+                    lastSeen: serverTimestamp()
+                });
+            }
+        });
+    </script>
+</body>
+</html> now = new Date();
             const yesterday = new Date(now);
             yesterday.setDate(yesterday.getDate() - 1);
             
