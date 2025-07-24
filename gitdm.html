@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GitDM - Developer Messaging</title>
-    <meta name="description" content="Private messaging for developers. Direct message any GitHub user, create group chats, and collaborate seamlessly.">
+    <meta name="description" content="Private messaging for developers. Direct message any GitHub user instantly.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
     
     <style>
@@ -22,60 +22,93 @@
             overflow: hidden;
         }
 
-        /* Auth Screen */
-        .auth-screen {
+        /* Landing/Auth Screen */
+        .landing-screen {
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
             background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            position: relative;
+        }
+
+        .landing-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(88, 166, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
+            z-index: 1;
         }
 
         .auth-container {
             background: rgba(33, 38, 45, 0.95);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
             border: 1px solid #30363d;
             border-radius: 16px;
             padding: 3rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
+            z-index: 10;
+            position: relative;
         }
 
         .logo {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 16px;
             margin-bottom: 2rem;
         }
 
-        .logo svg {
-            width: 48px;
-            height: 48px;
-            fill: #58a6ff;
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
         }
 
         .logo h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #58a6ff;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .tagline {
             color: #8b949e;
-            margin-bottom: 2rem;
-            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .subtitle {
+            color: #6e7681;
+            margin-bottom: 3rem;
+            font-size: 1rem;
+            line-height: 1.5;
         }
 
         .github-login-btn {
             width: 100%;
-            padding: 16px 24px;
-            background: #238636;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -84,24 +117,78 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
         }
 
         .github-login-btn:hover {
-            background: #2ea043;
+            background: linear-gradient(135deg, #2ea043 0%, #238636 100%);
             transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(35, 134, 54, 0.4);
         }
 
         .github-login-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
-        .github-login-btn svg {
-            width: 20px;
-            height: 20px;
+        .github-icon {
+            width: 24px;
+            height: 24px;
             fill: currentColor;
+        }
+
+        .demo-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: transparent;
+            color: #58a6ff;
+            border: 2px solid #58a6ff;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .demo-btn:hover {
+            background: #58a6ff;
+            color: #0d1117;
+            transform: translateY(-1px);
+        }
+
+        .features-list {
+            text-align: left;
+            margin: 2rem 0;
+            padding: 0 1rem;
+        }
+
+        .features-list h3 {
+            color: #f0f6fc;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #8b949e;
+        }
+
+        .feature-icon {
+            width: 16px;
+            height: 16px;
+            color: #3fb950;
         }
 
         .error-message {
@@ -112,7 +199,7 @@
             padding: 12px;
             background: rgba(248, 81, 73, 0.1);
             border: 1px solid rgba(248, 81, 73, 0.3);
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
         .success-message {
@@ -123,35 +210,14 @@
             padding: 12px;
             background: rgba(63, 185, 80, 0.1);
             border: 1px solid rgba(63, 185, 80, 0.3);
-            border-radius: 6px;
-        }
-
-        .loading {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            margin-left: 8px;
-            border: 2px solid #ffffff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+            border-radius: 8px;
         }
 
         /* Main App Layout */
         .app-container {
             display: none;
             height: 100vh;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 320px 1fr;
             background: #0d1117;
         }
 
@@ -165,61 +231,87 @@
         }
 
         .sidebar-header {
-            padding: 1rem;
+            padding: 1.5rem;
             border-bottom: 1px solid #30363d;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: #21262d;
         }
 
-        .user-info {
+        .user-profile {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            margin-bottom: 1rem;
         }
 
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             border: 2px solid #58a6ff;
         }
 
-        .user-name {
-            font-weight: 600;
+        .user-details h3 {
+            font-size: 16px;
             color: #f0f6fc;
-            font-size: 14px;
+            margin-bottom: 2px;
         }
 
-        .logout-btn {
+        .user-status {
+            font-size: 12px;
+            color: #3fb950;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #3fb950;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            padding: 6px 12px;
             background: transparent;
             color: #8b949e;
             border: 1px solid #30363d;
-            padding: 6px 12px;
             border-radius: 6px;
-            cursor: pointer;
             font-size: 12px;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
 
-        .logout-btn:hover {
+        .header-btn:hover {
             background: #30363d;
             color: #f0f6fc;
         }
 
-        .search-container {
-            padding: 1rem;
+        .search-section {
+            padding: 1rem 1.5rem;
             border-bottom: 1px solid #30363d;
         }
 
         .search-input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 16px;
             background: #0d1117;
             border: 1px solid #30363d;
-            border-radius: 6px;
+            border-radius: 8px;
             color: #f0f6fc;
             font-size: 14px;
+            transition: border-color 0.3s ease;
         }
 
         .search-input:focus {
@@ -228,20 +320,25 @@
         }
 
         .search-input::placeholder {
-            color: #8b949e;
+            color: #6e7681;
         }
 
         .new-chat-btn {
             width: 100%;
-            margin-top: 8px;
-            padding: 8px 12px;
+            margin-top: 12px;
+            padding: 10px 16px;
             background: #238636;
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
             transition: background 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .new-chat-btn:hover {
@@ -249,17 +346,25 @@
         }
 
         /* Conversations List */
-        .conversations-list {
+        .conversations-section {
             flex: 1;
             overflow-y: auto;
-            padding: 0.5rem 0;
+        }
+
+        .section-header {
+            padding: 1rem 1.5rem 0.5rem;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .conversation-item {
-            padding: 12px 16px;
+            padding: 12px 1.5rem;
             cursor: pointer;
-            border-bottom: 1px solid rgba(48, 54, 61, 0.5);
             transition: background 0.3s ease;
+            border-left: 3px solid transparent;
             position: relative;
         }
 
@@ -268,7 +373,8 @@
         }
 
         .conversation-item.active {
-            background: #1f6feb;
+            background: rgba(88, 166, 255, 0.1);
+            border-left-color: #58a6ff;
         }
 
         .conversation-header {
@@ -286,7 +392,7 @@
 
         .conversation-time {
             font-size: 11px;
-            color: #8b949e;
+            color: #6e7681;
         }
 
         .conversation-preview {
@@ -295,19 +401,21 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            max-width: 200px;
         }
 
         .unread-badge {
             position: absolute;
             top: 12px;
-            right: 12px;
+            right: 1.5rem;
             background: #f85149;
             color: white;
             font-size: 10px;
             padding: 2px 6px;
             border-radius: 10px;
-            min-width: 16px;
+            min-width: 18px;
             text-align: center;
+            font-weight: 600;
         }
 
         /* Chat Area */
@@ -319,10 +427,10 @@
         }
 
         .chat-header {
-            padding: 1rem 1.5rem;
+            padding: 1.5rem;
             border-bottom: 1px solid #30363d;
             background: #161b22;
-            display: flex;
+            display: none;
             justify-content: space-between;
             align-items: center;
         }
@@ -334,14 +442,14 @@
         }
 
         .chat-avatar {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             border: 2px solid #58a6ff;
         }
 
         .chat-user-details h3 {
-            font-size: 16px;
+            font-size: 18px;
             color: #f0f6fc;
             margin-bottom: 2px;
         }
@@ -354,26 +462,19 @@
             gap: 4px;
         }
 
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #3fb950;
-        }
-
         .chat-actions {
             display: flex;
             gap: 8px;
         }
 
         .chat-action-btn {
+            padding: 8px 12px;
             background: transparent;
             color: #8b949e;
             border: 1px solid #30363d;
-            padding: 6px 12px;
             border-radius: 6px;
-            cursor: pointer;
             font-size: 12px;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
 
@@ -382,7 +483,7 @@
             color: #f0f6fc;
         }
 
-        /* Messages Area */
+        /* Messages Container */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -390,11 +491,48 @@
             background: #0d1117;
         }
 
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #58a6ff 0%, #7c3aed 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 1.5rem;
+        }
+
+        .welcome-screen h2 {
+            color: #f0f6fc;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .welcome-screen p {
+            color: #8b949e;
+            font-size: 1rem;
+            line-height: 1.5;
+            max-width: 400px;
+        }
+
         .message {
             margin-bottom: 1rem;
             display: flex;
             align-items: flex-end;
             gap: 8px;
+            animation: fadeIn 0.3s ease;
         }
 
         .message.own {
@@ -402,8 +540,8 @@
         }
 
         .message-avatar {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             flex-shrink: 0;
         }
@@ -411,8 +549,8 @@
         .message-content {
             max-width: 70%;
             background: #21262d;
-            padding: 8px 12px;
-            border-radius: 12px;
+            padding: 10px 14px;
+            border-radius: 16px;
             position: relative;
         }
 
@@ -425,6 +563,7 @@
             font-size: 14px;
             line-height: 1.4;
             margin-bottom: 4px;
+            word-wrap: break-word;
         }
 
         .message-time {
@@ -442,6 +581,15 @@
             padding: 1rem 1.5rem;
             background: #161b22;
             border-top: 1px solid #30363d;
+            display: none;
+        }
+
+        .typing-indicator {
+            padding: 8px 0;
+            font-size: 12px;
+            color: #8b949e;
+            font-style: italic;
+            display: none;
         }
 
         .message-input-form {
@@ -452,16 +600,18 @@
 
         .message-input {
             flex: 1;
-            min-height: 40px;
+            min-height: 44px;
             max-height: 120px;
-            padding: 10px 12px;
+            padding: 12px 16px;
             background: #0d1117;
             border: 1px solid #30363d;
-            border-radius: 20px;
+            border-radius: 22px;
             color: #f0f6fc;
             font-size: 14px;
             resize: none;
             font-family: inherit;
+            line-height: 1.4;
+            transition: border-color 0.3s ease;
         }
 
         .message-input:focus {
@@ -470,12 +620,12 @@
         }
 
         .message-input::placeholder {
-            color: #8b949e;
+            color: #6e7681;
         }
 
         .send-btn {
-            width: 40px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
             background: #238636;
             color: white;
             border: none;
@@ -484,49 +634,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
             flex-shrink: 0;
         }
 
         .send-btn:hover {
             background: #2ea043;
+            transform: scale(1.05);
         }
 
         .send-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
 
-        /* Welcome Screen */
-        .welcome-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .welcome-screen svg {
-            width: 64px;
-            height: 64px;
-            fill: #58a6ff;
-            margin-bottom: 1rem;
-        }
-
-        .welcome-screen h2 {
-            color: #f0f6fc;
-            margin-bottom: 0.5rem;
-            font-size: 1.5rem;
-        }
-
-        .welcome-screen p {
-            color: #8b949e;
-            font-size: 1rem;
-        }
-
-        /* New Chat Modal */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -534,6 +657,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
             display: none;
             justify-content: center;
             align-items: center;
@@ -543,10 +667,11 @@
         .modal-content {
             background: #21262d;
             border: 1px solid #30363d;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 2rem;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
         }
 
         .modal-header {
@@ -557,8 +682,8 @@
         }
 
         .modal-title {
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-size: 1.3rem;
+            font-weight: 700;
             color: #f0f6fc;
         }
 
@@ -569,32 +694,36 @@
             font-size: 1.5rem;
             cursor: pointer;
             padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
 
         .close-btn:hover {
             color: #f0f6fc;
+            background: #30363d;
         }
 
         .form-group {
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-label {
             display: block;
             margin-bottom: 0.5rem;
-            font-weight: 500;
+            font-weight: 600;
             color: #f0f6fc;
             font-size: 14px;
         }
 
         .form-input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 16px;
             background: #0d1117;
             border: 1px solid #30363d;
-            border-radius: 6px;
+            border-radius: 8px;
             color: #f0f6fc;
             font-size: 14px;
+            transition: border-color 0.3s ease;
         }
 
         .form-input:focus {
@@ -603,22 +732,22 @@
         }
 
         .form-input::placeholder {
-            color: #8b949e;
+            color: #6e7681;
         }
 
         .modal-actions {
             display: flex;
-            gap: 8px;
+            gap: 12px;
             justify-content: flex-end;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -643,36 +772,10 @@
             color: #f0f6fc;
         }
 
-        /* Admin Features */
-        .admin-badge {
-            display: none;
-            background: #f85149;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 8px;
-            margin-left: 8px;
-        }
-
-        .admin-actions {
-            display: none;
-            gap: 4px;
-            margin-top: 4px;
-        }
-
-        .admin-btn {
-            background: #f85149;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .admin-btn:hover {
-            background: #da3633;
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Responsive Design */
@@ -695,21 +798,15 @@
             }
 
             .mobile-menu-btn {
-                display: block;
-                background: transparent;
-                color: #8b949e;
-                border: none;
-                font-size: 1.2rem;
-                cursor: pointer;
-                padding: 4px;
-            }
-
-            .chat-header {
-                padding: 1rem;
+                display: block !important;
             }
         }
 
-        /* Scrollbar Styling */
+        .mobile-menu-btn {
+            display: none;
+        }
+
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -726,59 +823,43 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #58a6ff;
         }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message {
-            animation: fadeIn 0.3s ease;
-        }
-
-        .typing-indicator {
-            display: none;
-            padding: 8px 12px;
-            background: #21262d;
-            border-radius: 12px;
-            margin: 4px 0;
-            font-size: 12px;
-            color: #8b949e;
-            font-style: italic;
-        }
-
-        .typing-dots {
-            display: inline-block;
-        }
-
-        .typing-dots::after {
-            content: '...';
-            animation: typing 1.5s infinite;
-        }
-
-        @keyframes typing {
-            0%, 60% { content: '.'; }
-            30% { content: '..'; }
-            90% { content: '...'; }
-        }
     </style>
 </head>
 <body>
-    <!-- Authentication Screen -->
-    <div id="authScreen" class="auth-screen">
+    <!-- Landing Screen -->
+    <div id="landingScreen" class="landing-screen">
         <div class="auth-container">
             <div class="logo">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
+                <div class="logo-icon">💬</div>
                 <h1>GitDM</h1>
             </div>
-            <p class="tagline">Private messaging for developers</p>
             
+            <p class="tagline">Developer Messaging Platform</p>
+            <p class="subtitle">Private messaging for developers. Connect with any GitHub user instantly.</p>
+            
+            <div class="features-list">
+                <h3>🚀 Key Features</h3>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Message any GitHub developer</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Real-time messaging</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>GitHub profile integration</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Secure & private conversations</span>
+                </div>
+            </div>
+
             <button id="githubLoginBtn" class="github-login-btn">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                <svg class="github-icon" viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
                 </svg>
                 Continue with GitHub
             </button>
@@ -793,29 +874,44 @@
         <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="user-info">
+                <div class="user-profile">
                     <img id="currentUserAvatar" class="user-avatar" src="" alt="User">
-                    <div>
-                        <div id="currentUserName" class="user-name"></div>
-                        <div class="admin-badge" id="adminBadge">ADMIN</div>
+                    <div class="user-details">
+                        <h3 id="currentUserName"></h3>
+                        <div class="user-status">
+                            <div class="status-dot"></div>
+                            <span>Online</span>
+                        </div>
                     </div>
                 </div>
-                <button class="logout-btn" onclick="logout()">Sign Out</button>
+                <div class="header-actions">
+                    <button class="header-btn" id="settingsBtn">⚙️</button>
+                    <button class="header-btn" onclick="logout()">Sign Out</button>
+                </div>
             </div>
 
-            <div class="search-container">
+            <div class="search-section">
                 <input type="text" class="search-input" id="searchInput" placeholder="Search conversations...">
-                <button class="new-chat-btn" onclick="showNewChatModal()">+ New Chat</button>
+                <button class="new-chat-btn" onclick="showNewChatModal()">
+                    <span>+</span>
+                    New Chat
+                </button>
             </div>
 
-            <div class="conversations-list" id="conversationsList">
-                <!-- Conversations will be loaded here -->
+            <div class="conversations-section">
+                <div class="section-header">Recent Conversations</div>
+                <div id="conversationsList">
+                    <div style="padding: 2rem; text-align: center; color: #8b949e;">
+                        <p>No conversations yet</p>
+                        <p style="font-size: 12px; margin-top: 0.5rem;">Sign in with GitHub to start messaging developers!</p>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Chat Area -->
         <div class="chat-area">
-            <div class="chat-header" id="chatHeader" style="display: none;">
+            <div class="chat-header" id="chatHeader">
                 <div class="chat-user-info">
                     <img id="chatAvatar" class="chat-avatar" src="" alt="User">
                     <div class="chat-user-details">
@@ -827,32 +923,28 @@
                     </div>
                 </div>
                 <div class="chat-actions">
-                    <button class="chat-action-btn mobile-menu-btn" onclick="toggleSidebar()" style="display: none;">☰</button>
-                    <div class="admin-actions" id="adminActions">
-                        <button class="admin-btn" onclick="blockUser()">Block</button>
-                        <button class="admin-btn" onclick="deleteConversation()">Delete</button>
-                    </div>
+                    <button class="chat-action-btn mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+                    <button class="chat-action-btn">📞</button>
+                    <button class="chat-action-btn">ℹ️</button>
                 </div>
             </div>
 
             <div class="messages-container" id="messagesContainer">
                 <div class="welcome-screen">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-                    </svg>
+                    <div class="welcome-icon">💬</div>
                     <h2>Welcome to GitDM</h2>
-                    <p>Select a conversation or start a new chat with any GitHub developer</p>
+                    <p>Select a conversation or start a new chat with any GitHub developer to begin messaging.</p>
                 </div>
             </div>
 
-            <div class="message-input-container" id="messageInputContainer" style="display: none;">
+            <div class="message-input-container" id="messageInputContainer">
                 <div class="typing-indicator" id="typingIndicator">
-                    <span id="typingUser"></span> is typing<span class="typing-dots"></span>
+                    <span id="typingUser"></span> is typing...
                 </div>
                 <form class="message-input-form" id="messageForm">
                     <textarea class="message-input" id="messageInput" placeholder="Type a message..." rows="1"></textarea>
                     <button type="submit" class="send-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
                         </svg>
                     </button>
@@ -881,77 +973,195 @@
         </div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { 
-            getAuth, 
-            signInWithPopup,
-            GithubAuthProvider,
-            signOut, 
-            onAuthStateChanged
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            query, 
-            orderBy, 
-            limit, 
-            onSnapshot,
-            serverTimestamp,
-            getDocs,
-            deleteDoc,
-            doc,
-            setDoc,
-            getDoc,
-            where,
-            updateDoc
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-        const firebaseConfig = {
-  apiKey: "AIzaSyDsy8TLR5rM8hXx4RCOupMesFTFyAnhP6I",
-  authDomain: "mychat-a0c39.firebaseapp.com",
-  projectId: "mychat-a0c39",
-  storageBucket: "mychat-a0c39.firebasestorage.app",
-  messagingSenderId: "258621648606",
-  appId: "1:258621648606:web:574317aba2c4767a621c4f",
-  measurementId: "G-CWDC7Y80ZX"
-};
-
-        // Initialize
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const provider = new GithubAuthProvider();
-        
-        // Add scopes for GitHub
-        provider.addScope('user:email');
-        provider.addScope('read:user');
-
+    <script>
         // Global variables
         let currentUser = null;
         let activeConversation = null;
         let conversations = new Map();
-        let messagesUnsubscribes = new Map();
-        
-        // Admin username
-        const ADMIN_USERNAME = "penderact13";
 
-        // Clear error/success messages
-        function clearMessages() {
-            document.getElementById('authError').style.display = 'none';
-            document.getElementById('authSuccess').style.display = 'none';
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // GitHub login button
+            document.getElementById('githubLoginBtn').addEventListener('click', function() {
+                showMessage('🔧 Firebase Setup Required: Please configure your Firebase project with GitHub authentication to enable login.', 'error');
+            });
+
+            // Message form
+            document.getElementById('messageForm').addEventListener('submit', handleSendMessage);
+
+            // New chat form
+            document.getElementById('newChatForm').addEventListener('submit', handleNewChat);
+
+            // Auto-resize textarea
+            document.getElementById('messageInput').addEventListener('input', function() {
+                adjustTextareaHeight(this);
+            });
+
+            // Search functionality
+            document.getElementById('searchInput').addEventListener('input', handleSearch);
+
+            // Close modal on outside click
+            document.getElementById('newChatModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideNewChatModal();
+                }
+            });
+
+            console.log('🚀 GitDM - Developer Messaging Platform Loaded');
+        });
+
+        // Handle send message
+        function handleSendMessage(e) {
+            e.preventDefault();
+            
+            if (!activeConversation || !currentUser) {
+                showMessage('Please sign in to send messages.', 'error');
+                return;
+            }
+            
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+            
+            if (!messageText) return;
+            
+            // Real implementation would send to Firebase here
+            showMessage('Message sending requires Firebase configuration.', 'error');
         }
 
-        // GitHub login handler
-        document.getElementById('githubLoginBtn').addEventListener('click', async function() {
-            const loginBtn = this;
+        // Handle new chat
+        function handleNewChat(e) {
+            e.preventDefault();
+            
+            if (!currentUser) {
+                showMessage('Please sign in to start new conversations.', 'error');
+                return;
+            }
+            
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) return;
+            
+            // Real implementation would create conversation in Firebase here
+            showMessage('Starting new chats requires Firebase configuration.', 'error');
+        }
+
+        // Handle search
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const conversationItems = document.querySelectorAll('.conversation-item');
+            
+            conversationItems.forEach(item => {
+                const name = item.querySelector('.conversation-name')?.textContent?.toLowerCase() || '';
+                const preview = item.querySelector('.conversation-preview')?.textContent?.toLowerCase() || '';
+                
+                if (name.includes(searchTerm) || preview.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Modal functions
+        window.showNewChatModal = function() {
+            if (!currentUser) {
+                showMessage('Please sign in to start new conversations.', 'error');
+                return;
+            }
+            document.getElementById('newChatModal').style.display = 'flex';
+            document.getElementById('usernameInput').focus();
+        };
+
+        window.hideNewChatModal = function() {
+            document.getElementById('newChatModal').style.display = 'none';
+            document.getElementById('newChatForm').reset();
+        };
+
+        // Mobile sidebar toggle
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        };
+
+        // Logout function
+        window.logout = function() {
+            if (!currentUser) {
+                showMessage('You are not signed in.', 'error');
+                return;
+            }
+            
+            currentUser = null;
+            activeConversation = null;
+            conversations.clear();
+            
+            document.getElementById('landingScreen').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
+            
+            showMessage('Signed out successfully!', 'success');
+        };
+
+        // Utility functions
+        function formatTime(date) {
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === now.toDateString()) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return 'Yesterday';
+            } else if (now - date < 7 * 24 * 60 * 60 * 1000) {
+                return date.toLocaleDateString([], { weekday: 'short' });
+            } else {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        function showMessage(text, type) {
             const errorDiv = document.getElementById('authError');
             const successDiv = document.getElementById('authSuccess');
             
-            clearMessages();
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
             
-            loginBtn.textContent = 'Signing in...';
-            loginBtn.classList.add('loading');
-            loginBtn.disabled = true;
+            if (type === 'error') {
+                errorDiv.textContent = text;
+                errorDiv.style.display = 'block';
+            } else {
+                successDiv.textContent = text;
+                successDiv.style.display = 'block';
+            }
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+                successDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Handle mobile responsiveness
+        function handleResize() {
+            if (window.innerWidth <= 768) {
+                const mobileBtn = document.querySelector('.mobile-menu-btn');
+                if (mobileBtn) mobileBtn.style.display = 'block';
+            } else {
+                const mobileBtn = document.querySelector('.mobile-menu-btn');
+                if (mobileBtn) mobileBtn.style.display = 'none';
+                document.getElementById('sidebar').classList.remove('mobile-open');
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('load', handleResize);
+    </script>
+</body>
+</html>
