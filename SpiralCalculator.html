@@ -1,0 +1,854 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parametric Spiral Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121826;
+            color: #e2e8f0;
+        }
+        .graph-container {
+            background-color: #1e293b;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .control-panel {
+            background-color: #1e293b;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .btn {
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .equation {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: #a5b4fc;
+        }
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+        /* Custom slider styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: #334155;
+            border-radius: 8px;
+            height: 6px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            background: #4f46e5;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            background: #4f46e5;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(15, 23, 42, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            border-radius: 1rem;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .tab {
+            transition: all 0.3s ease;
+        }
+        .tab.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .tab:not(.active):hover {
+            background-color: #3730a3;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-400 mb-2">Parametric Spiral Calculator</h1>
+            <p class="text-gray-300 text-lg">
+                Plotting points where <span class="equation">x = p·cos(p)</span> and <span class="equation">y = p·sin(p)</span> 
+                for various number sequences
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="graph-container lg:col-span-2 p-4 relative">
+                <canvas id="graphCanvas" height="400"></canvas>
+                <div id="loadingOverlay" class="loading-overlay hidden">
+                    <div class="text-center">
+                        <div class="spinner mx-auto mb-3"></div>
+                        <p class="text-indigo-300">Generating sequence and calculating points...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-panel p-6 flex flex-col">
+                <h2 class="text-xl font-bold text-indigo-400 mb-4">Controls</h2>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Number Sequence:</label>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button class="tab active py-2 px-3 rounded-md text-sm" data-sequence="prime">Prime Numbers</button>
+                        <button class="tab py-2 px-3 rounded-md text-sm" data-sequence="composite">Composite Numbers</button>
+                        <button class="tab py-2 px-3 rounded-md text-sm" data-sequence="natural">Natural Numbers</button>
+                        <button class="tab py-2 px-3 rounded-md text-sm" data-sequence="fibonacci">Fibonacci</button>
+                        <button class="tab py-2 px-3 rounded-md text-sm" data-sequence="square">Perfect Squares</button>
+                        <button class="tab py-2 px-3 rounded-md text-sm" data-sequence="special">Special Constants</button>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Number of points to show:</label>
+                    <div class="flex items-center">
+                        <input type="range" id="pointCount" min="1" max="10000" value="100" 
+                            class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                        <span id="pointCountValue" class="ml-3 text-indigo-300 font-medium min-w-[50px] text-right">100</span>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Equation Parameters:</label>
+                    <div class="grid grid-cols-2 gap-4 mb-2">
+                        <div>
+                            <label class="text-sm text-gray-400">X-coordinate:</label>
+                            <select id="xEquation" class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 text-sm">
+                                <option value="cos">p·cos(p)</option>
+                                <option value="sin">p·sin(p)</option>
+                                <option value="tan">p·tan(p)</option>
+                                <option value="p">p</option>
+                                <option value="p2">p²</option>
+                                <option value="sqrt">p·√p</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Y-coordinate:</label>
+                            <select id="yEquation" class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200 text-sm">
+                                <option value="sin">p·sin(p)</option>
+                                <option value="cos">p·cos(p)</option>
+                                <option value="tan">p·tan(p)</option>
+                                <option value="p">p</option>
+                                <option value="p2">p²</option>
+                                <option value="sqrt">p·√p</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="flex items-center text-sm text-gray-300">
+                            <input type="checkbox" id="useRadians" checked class="mr-2 h-4 w-4 accent-indigo-600">
+                            Use radians (uncheck for degrees)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Animation speed:</label>
+                    <div class="flex items-center">
+                        <input type="range" id="animationSpeed" min="1" max="20" value="5" 
+                            class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                        <span id="speedValue" class="ml-3 text-indigo-300 font-medium min-w-[50px] text-right">5</span>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Point size:</label>
+                    <div class="flex items-center">
+                        <input type="range" id="pointSize" min="1" max="10" value="3" 
+                            class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                        <span id="sizeValue" class="ml-3 text-indigo-300 font-medium min-w-[50px] text-right">3</span>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Color scheme:</label>
+                    <select id="colorScheme" class="w-full p-2 bg-gray-800 border border-gray-700 rounded-md text-gray-200">
+                        <option value="neon">Neon</option>
+                        <option value="plasma">Plasma</option>
+                        <option value="fire">Fire</option>
+                        <option value="ocean">Ocean</option>
+                        <option value="rainbow">Rainbow</option>
+                        <option value="monochrome">Monochrome</option>
+                    </select>
+                </div>
+
+                <div class="mt-auto space-y-3">
+                    <button id="animateBtn" class="btn w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md">
+                        Animate Points
+                    </button>
+                    <button id="resetBtn" class="btn w-full bg-gray-700 hover:bg-gray-600 text-gray-200 py-2 px-4 rounded-md">
+                        Reset View
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-gray-800 p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold text-indigo-400 mb-4">Data Table</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-700">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2 text-left text-sm font-medium text-gray-400">Index</th>
+                            <th class="px-4 py-2 text-left text-sm font-medium text-gray-400">Value (p)</th>
+                            <th id="xHeader" class="px-4 py-2 text-left text-sm font-medium text-gray-400">x = p·cos(p)</th>
+                            <th id="yHeader" class="px-4 py-2 text-left text-sm font-medium text-gray-400">y = p·sin(p)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable" class="divide-y divide-gray-700">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const PI = Math.PI;
+        const E = Math.E;
+        const PHI = (1 + Math.sqrt(5)) / 2; // Golden ratio
+        
+        // Current sequence and points
+        let currentSequence = "prime";
+        let sequenceValues = [];
+        let points = [];
+        
+        // DOM elements
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const xHeader = document.getElementById('xHeader');
+        const yHeader = document.getElementById('yHeader');
+        
+        // Generate different number sequences
+        function generateSequence(type, count) {
+            switch(type) {
+                case "prime":
+                    return generatePrimes(count);
+                case "composite":
+                    return generateComposites(count);
+                case "natural":
+                    return Array.from({length: count}, (_, i) => i + 1);
+                case "fibonacci":
+                    return generateFibonacci(count);
+                case "square":
+                    return Array.from({length: count}, (_, i) => (i + 1) * (i + 1));
+                case "special":
+                    return generateSpecialConstants(count);
+                default:
+                    return generatePrimes(count);
+            }
+        }
+        
+        // Generate prime numbers using the Sieve of Eratosthenes
+        function generatePrimes(count) {
+            const max = count * 20; // Estimate to ensure we get enough primes
+            const sieve = Array(max).fill(true);
+            sieve[0] = sieve[1] = false;
+            
+            for (let i = 2; i * i < max; i++) {
+                if (sieve[i]) {
+                    for (let j = i * i; j < max; j += i) {
+                        sieve[j] = false;
+                    }
+                }
+            }
+            
+            const primes = [];
+            for (let i = 2; i < max && primes.length < count; i++) {
+                if (sieve[i]) primes.push(i);
+            }
+            
+            return primes;
+        }
+        
+        // Generate composite numbers (non-prime numbers greater than 1)
+        function generateComposites(count) {
+            const composites = [];
+            let num = 4; // First composite number
+            
+            while (composites.length < count) {
+                // Check if num is composite
+                let isPrime = true;
+                for (let i = 2; i <= Math.sqrt(num); i++) {
+                    if (num % i === 0) {
+                        isPrime = false;
+                        break;
+                    }
+                }
+                
+                if (!isPrime) {
+                    composites.push(num);
+                }
+                
+                num++;
+            }
+            
+            return composites;
+        }
+        
+        // Generate Fibonacci sequence
+        function generateFibonacci(count) {
+            const fibonacci = [1, 1];
+            
+            while (fibonacci.length < count) {
+                fibonacci.push(fibonacci[fibonacci.length - 1] + fibonacci[fibonacci.length - 2]);
+            }
+            
+            return fibonacci;
+        }
+        
+        // Generate special constants (π, e, φ and their multiples)
+        function generateSpecialConstants(count) {
+            const constants = [];
+            const baseConstants = [PI, E, PHI]; // π, e, φ
+            
+            for (let i = 0; i < count; i++) {
+                const baseIndex = i % 3;
+                const multiplier = Math.floor(i / 3) + 1;
+                constants.push(baseConstants[baseIndex] * multiplier);
+            }
+            
+            return constants;
+        }
+        
+        // Calculate points based on the parametric equations
+        function calculatePoints(values, xEq, yEq, useRadians) {
+            return values.map(p => {
+                let x, y;
+                
+                // Convert to radians if needed
+                const angle = useRadians ? p : p * (Math.PI / 180);
+                
+                // Calculate x-coordinate
+                switch(xEq) {
+                    case "cos":
+                        x = p * Math.cos(angle);
+                        break;
+                    case "sin":
+                        x = p * Math.sin(angle);
+                        break;
+                    case "tan":
+                        x = p * Math.tan(angle);
+                        break;
+                    case "p":
+                        x = p;
+                        break;
+                    case "p2":
+                        x = p * p;
+                        break;
+                    case "sqrt":
+                        x = p * Math.sqrt(p);
+                        break;
+                    default:
+                        x = p * Math.cos(angle);
+                }
+                
+                // Calculate y-coordinate
+                switch(yEq) {
+                    case "sin":
+                        y = p * Math.sin(angle);
+                        break;
+                    case "cos":
+                        y = p * Math.cos(angle);
+                        break;
+                    case "tan":
+                        y = p * Math.tan(angle);
+                        break;
+                    case "p":
+                        y = p;
+                        break;
+                    case "p2":
+                        y = p * p;
+                        break;
+                    case "sqrt":
+                        y = p * Math.sqrt(p);
+                        break;
+                    default:
+                        y = p * Math.sin(angle);
+                }
+                
+                return {
+                    x: isFinite(x) ? x : 0,
+                    y: isFinite(y) ? y : 0,
+                    value: p
+                };
+            });
+        }
+        
+        // Update equation headers
+        function updateEquationHeaders() {
+            const xEq = document.getElementById('xEquation').value;
+            const yEq = document.getElementById('yEquation').value;
+            const useRadians = document.getElementById('useRadians').checked;
+            const angleUnit = useRadians ? "" : "°";
+            
+            let xText, yText;
+            
+            // X equation text
+            switch(xEq) {
+                case "cos":
+                    xText = `x = p·cos(p${angleUnit})`;
+                    break;
+                case "sin":
+                    xText = `x = p·sin(p${angleUnit})`;
+                    break;
+                case "tan":
+                    xText = `x = p·tan(p${angleUnit})`;
+                    break;
+                case "p":
+                    xText = "x = p";
+                    break;
+                case "p2":
+                    xText = "x = p²";
+                    break;
+                case "sqrt":
+                    xText = "x = p·√p";
+                    break;
+            }
+            
+            // Y equation text
+            switch(yEq) {
+                case "sin":
+                    yText = `y = p·sin(p${angleUnit})`;
+                    break;
+                case "cos":
+                    yText = `y = p·cos(p${angleUnit})`;
+                    break;
+                case "tan":
+                    yText = `y = p·tan(p${angleUnit})`;
+                    break;
+                case "p":
+                    yText = "y = p";
+                    break;
+                case "p2":
+                    yText = "y = p²";
+                    break;
+                case "sqrt":
+                    yText = "y = p·√p";
+                    break;
+            }
+            
+            xHeader.textContent = xText;
+            yHeader.textContent = yText;
+            
+            // Update the equation in the header
+            const equationText = document.querySelector('header p .equation');
+            equationText.innerHTML = `${xText}, ${yText}`;
+        }
+        
+        // Generate sequence and calculate points asynchronously
+        function generateDataAsync() {
+            loadingOverlay.classList.remove('hidden');
+            
+            // Use setTimeout to allow the UI to update before starting the computation
+            setTimeout(() => {
+                const count = parseInt(document.getElementById('pointCount').value);
+                const xEq = document.getElementById('xEquation').value;
+                const yEq = document.getElementById('yEquation').value;
+                const useRadians = document.getElementById('useRadians').checked;
+                
+                // Generate the sequence
+                sequenceValues = generateSequence(currentSequence, count);
+                
+                // Calculate points
+                points = calculatePoints(sequenceValues, xEq, yEq, useRadians);
+                
+                // Update equation headers
+                updateEquationHeaders();
+                
+                // Update the chart
+                updateChart(count);
+                loadingOverlay.classList.add('hidden');
+            }, 100);
+        }
+        
+        // Set up the chart
+        const ctx = document.getElementById('graphCanvas').getContext('2d');
+        
+        // Color schemes
+        const colorSchemes = {
+            neon: (i, total) => `hsl(${(i / total) * 360}, 100%, 65%)`,
+            plasma: (i, total) => {
+                const hue = 260 + (i / total) * 100; // Purple to pink
+                return `hsl(${hue}, 90%, 60%)`;
+            },
+            fire: (i, total) => {
+                const hue = 30 - (i / total) * 30; // Yellow to red
+                return `hsl(${hue}, 100%, 60%)`;
+            },
+            ocean: (i, total) => {
+                const hue = 180 + (i / total) * 60; // Cyan to blue
+                return `hsl(${hue}, 90%, 60%)`;
+            },
+            rainbow: (i, total) => `hsl(${(i / total) * 360}, 80%, 60%)`,
+            monochrome: (i, total) => {
+                const lightness = 80 - (i / total) * 50; // Light to dark
+                return `hsl(220, 70%, ${lightness}%)`;
+            }
+        };
+        
+        // Create the chart with dark mode
+        let chart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Parametric Points',
+                    data: [],
+                    backgroundColor: [],
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'center',
+                        grid: {
+                            color: 'rgba(100, 116, 139, 0.2)',
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'center',
+                        grid: {
+                            color: 'rgba(100, 116, 139, 0.2)',
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+                        titleColor: '#e2e8f0',
+                        bodyColor: '#e2e8f0',
+                        borderColor: '#4f46e5',
+                        borderWidth: 1,
+                        callbacks: {
+                            title: function(context) {
+                                const point = points[context[0].dataIndex];
+                                let title = "";
+                                
+                                switch(currentSequence) {
+                                    case "prime":
+                                        title = `Prime: ${point.value}`;
+                                        break;
+                                    case "composite":
+                                        title = `Composite: ${point.value}`;
+                                        break;
+                                    case "natural":
+                                        title = `Natural: ${point.value}`;
+                                        break;
+                                    case "fibonacci":
+                                        title = `Fibonacci: ${point.value}`;
+                                        break;
+                                    case "square":
+                                        title = `Perfect Square: ${point.value} (${Math.sqrt(point.value)}²)`;
+                                        break;
+                                    case "special":
+                                        const index = context[0].dataIndex;
+                                        const baseIndex = index % 3;
+                                        const multiplier = Math.floor(index / 3) + 1;
+                                        const constantNames = ["π", "e", "φ"];
+                                        title = `${constantNames[baseIndex]}${multiplier > 1 ? ` × ${multiplier}` : ''} = ${point.value.toFixed(6)}`;
+                                        break;
+                                    default:
+                                        title = `Value: ${point.value}`;
+                                }
+                                
+                                return title;
+                            },
+                            label: function(context) {
+                                const point = points[context.dataIndex];
+                                return `Coordinates: (${point.x.toFixed(4)}, ${point.y.toFixed(4)})`;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                animation: {
+                    duration: 1000
+                }
+            }
+        });
+        
+        // Function to update the chart with a specific number of points
+        function updateChart(count, colorScheme = 'neon', pointSize = 3) {
+            if (points.length === 0) return; // Wait until points are calculated
+            
+            const visiblePoints = points.slice(0, count);
+            const colors = visiblePoints.map((_, i) => colorSchemes[colorScheme](i, count));
+            
+            // Find the maximum absolute value for setting the chart scale
+            // Filter out Infinity and NaN values
+            const validPoints = visiblePoints.filter(p => 
+                isFinite(p.x) && !isNaN(p.x) && isFinite(p.y) && !isNaN(p.y)
+            );
+            
+            const maxAbsValue = Math.max(
+                ...validPoints.map(p => Math.abs(p.x)),
+                ...validPoints.map(p => Math.abs(p.y)),
+                1 // Ensure we have at least some scale
+            ) * 1.1; // Add 10% padding
+            
+            chart.options.scales.x.min = -maxAbsValue;
+            chart.options.scales.x.max = maxAbsValue;
+            chart.options.scales.y.min = -maxAbsValue;
+            chart.options.scales.y.max = maxAbsValue;
+            
+            chart.data.datasets[0].data = visiblePoints;
+            chart.data.datasets[0].backgroundColor = colors;
+            chart.data.datasets[0].pointRadius = pointSize;
+            chart.data.datasets[0].pointHoverRadius = pointSize + 2;
+            chart.update();
+            
+            // Update the data table (limit to first 100 for performance)
+            updateDataTable(visiblePoints.slice(0, 100));
+        }
+        
+        // Function to update the data table
+        function updateDataTable(visiblePoints) {
+            const tableBody = document.getElementById('dataTable');
+            tableBody.innerHTML = '';
+            
+            visiblePoints.forEach((point, index) => {
+                const row = document.createElement('tr');
+                
+                // Format the value display for special constants
+                let valueDisplay = point.value;
+                if (currentSequence === "special") {
+                    const baseIndex = index % 3;
+                    const multiplier = Math.floor(index / 3) + 1;
+                    const constantNames = ["π", "e", "φ"];
+                    valueDisplay = `${constantNames[baseIndex]}${multiplier > 1 ? ` × ${multiplier}` : ''} = ${point.value.toFixed(6)}`;
+                } else if (currentSequence === "square") {
+                    valueDisplay = `${point.value} (${Math.sqrt(point.value)}²)`;
+                }
+                
+                row.innerHTML = `
+                    <td class="px-4 py-2 text-sm text-gray-400">${index + 1}</td>
+                    <td class="px-4 py-2 text-sm text-gray-300">${valueDisplay}</td>
+                    <td class="px-4 py-2 text-sm text-gray-300">${point.x.toFixed(4)}</td>
+                    <td class="px-4 py-2 text-sm text-gray-300">${point.y.toFixed(4)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            // Add a note if showing limited data
+            if (parseInt(document.getElementById('pointCount').value) > 100) {
+                const noteRow = document.createElement('tr');
+                noteRow.innerHTML = `
+                    <td colspan="4" class="px-4 py-2 text-sm text-indigo-400 text-center italic">
+                        Showing first 100 points of ${document.getElementById('pointCount').value} total points
+                    </td>
+                `;
+                tableBody.appendChild(noteRow);
+            }
+        }
+        
+        // Initialize with prime numbers
+        generateDataAsync();
+        
+        // Event listeners for sequence tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Update active tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update current sequence
+                currentSequence = this.dataset.sequence;
+                
+                // Generate new data
+                generateDataAsync();
+            });
+        });
+        
+        // Event listeners for controls
+        document.getElementById('pointCount').addEventListener('input', function() {
+            const count = parseInt(this.value);
+            document.getElementById('pointCountValue').textContent = count;
+            
+            // If we're requesting more points than we've calculated, regenerate
+            if (count > sequenceValues.length) {
+                generateDataAsync();
+                return;
+            }
+            
+            updateChart(
+                count, 
+                document.getElementById('colorScheme').value,
+                parseInt(document.getElementById('pointSize').value)
+            );
+        });
+        
+        document.getElementById('xEquation').addEventListener('change', function() {
+            generateDataAsync();
+        });
+        
+        document.getElementById('yEquation').addEventListener('change', function() {
+            generateDataAsync();
+        });
+        
+        document.getElementById('useRadians').addEventListener('change', function() {
+            generateDataAsync();
+        });
+        
+        document.getElementById('colorScheme').addEventListener('change', function() {
+            updateChart(
+                parseInt(document.getElementById('pointCount').value),
+                this.value,
+                parseInt(document.getElementById('pointSize').value)
+            );
+        });
+        
+        document.getElementById('pointSize').addEventListener('input', function() {
+            const size = parseInt(this.value);
+            document.getElementById('sizeValue').textContent = size;
+            updateChart(
+                parseInt(document.getElementById('pointCount').value),
+                document.getElementById('colorScheme').value,
+                size
+            );
+        });
+        
+        document.getElementById('animationSpeed').addEventListener('input', function() {
+            const speed = parseInt(this.value);
+            document.getElementById('speedValue').textContent = speed;
+        });
+        
+        // Animation functionality
+        document.getElementById('animateBtn').addEventListener('click', function() {
+            const targetCount = parseInt(document.getElementById('pointCount').value);
+            const speed = parseInt(document.getElementById('animationSpeed').value);
+            const colorScheme = document.getElementById('colorScheme').value;
+            const pointSize = parseInt(document.getElementById('pointSize').value);
+            
+            // Disable controls during animation
+            document.getElementById('pointCount').disabled = true;
+            document.getElementById('animateBtn').disabled = true;
+            document.getElementById('colorScheme').disabled = true;
+            document.getElementById('pointSize').disabled = true;
+            document.getElementById('xEquation').disabled = true;
+            document.getElementById('yEquation').disabled = true;
+            document.getElementById('useRadians').disabled = true;
+            document.querySelectorAll('.tab').forEach(tab => tab.disabled = true);
+            
+            // Reset to 0 points
+            updateChart(0, colorScheme, pointSize);
+            
+            // Calculate step size based on target count and speed
+            // For larger counts, we need bigger steps to keep animation time reasonable
+            let stepSize = 1;
+            if (targetCount > 1000) stepSize = 10;
+            if (targetCount > 5000) stepSize = 50;
+            
+            // Animate adding points step by step
+            let currentCount = 0;
+            const interval = setInterval(() => {
+                currentCount = Math.min(currentCount + stepSize, targetCount);
+                document.getElementById('pointCount').value = currentCount;
+                document.getElementById('pointCountValue').textContent = currentCount;
+                updateChart(currentCount, colorScheme, pointSize);
+                
+                if (currentCount >= targetCount) {
+                    clearInterval(interval);
+                    // Re-enable controls
+                    document.getElementById('pointCount').disabled = false;
+                    document.getElementById('animateBtn').disabled = false;
+                    document.getElementById('colorScheme').disabled = false;
+                    document.getElementById('pointSize').disabled = false;
+                    document.getElementById('xEquation').disabled = false;
+                    document.getElementById('yEquation').disabled = false;
+                    document.getElementById('useRadians').disabled = false;
+                    document.querySelectorAll('.tab').forEach(tab => tab.disabled = false);
+                }
+            }, 1000 / speed);
+        });
+        
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', function() {
+            // Reset all controls to default values
+            document.getElementById('pointCount').value = 100;
+            document.getElementById('pointCountValue').textContent = 100;
+            document.getElementById('animationSpeed').value = 5;
+            document.getElementById('speedValue').textContent = 5;
+            document.getElementById('pointSize').value = 3;
+            document.getElementById('sizeValue').textContent = 3;
+            document.getElementById('colorScheme').value = 'neon';
+            document.getElementById('xEquation').value = 'cos';
+            document.getElementById('yEquation').value = 'sin';
+            document.getElementById('useRadians').checked = true;
+            
+            // Reset sequence to prime numbers
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.sequence === 'prime') {
+                    tab.classList.add('active');
+                }
+            });
+            currentSequence = 'prime';
+            
+            // Generate new data
+            generateDataAsync();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9435f120a27769b9',t:'MTc0Nzg1MDA5Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
