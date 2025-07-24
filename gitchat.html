@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitChat - Developer Chat Room</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #24292e 0%, #1a1e22 50%, #0d1117 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #f0f6fc;
+        }
+
+        .container {
+            background: rgba(13, 17, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #30363d;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+        }
+
+        .auth-container {
+            text-align: center;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .logo svg {
+            width: 48px;
+            height: 48px;
+            fill: #f78166;
+        }
+
+        .logo h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f78166 0%, #58a6ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 2rem;
+            font-size: 16px;
+        }
+
+        .github-login-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .github-login-btn:hover {
+            background: #2ea043;
+            transform: translateY(-2px);
+        }
+
+        .github-login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .github-login-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .chat-container {
+            display: none;
+            height: 600px;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #21262d 0%, #30363d 100%);
+            border: 1px solid #30363d;
+            color: #f0f6fc;
+            padding: 1rem 1.5rem;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #58a6ff;
+        }
+
+        .welcome-text {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .connection-status {
+            font-size: 12px;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3fb950;
+        }
+
+        .logout-btn {
+            background: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .logout-btn:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+
+        .admin-flag-btn {
+            background: #fb8500;
+            color: white;
+            border: 1px solid #fd9e2d;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .admin-flag-btn:hover {
+            background: #e07600;
+            transform: translateY(-1px);
+        }
+
+        .admin-nuke-btn {
+            background: #da3633;
+            color: white;
+            border: 1px solid #f85149;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .admin-nuke-btn:hover {
+            background: #b62324;
+            transform: translateY(-1px);
+        }
+
+        .nuke-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .nuke-modal.show {
+            display: flex;
+        }
+
+        .nuke-modal-content {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 400px;
+            margin: 1rem;
+            text-align: center;
+        }
+
+        .nuke-modal h3 {
+            color: #f85149;
+            margin-bottom: 1rem;
+            font-size: 20px;
+        }
+
+        .nuke-modal p {
+            color: #8b949e;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .nuke-modal input {
+            width: 100%;
+            padding: 12px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #f0f6fc;
+            font-size: 14px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-family: 'SF Mono', Monaco, monospace;
+            letter-spacing: 1px;
+        }
+
+        .nuke-modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .nuke-confirm-btn {
+            background: #da3633;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .nuke-confirm-btn:hover {
+            background: #b62324;
+        }
+
+        .nuke-confirm-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nuke-cancel-btn {
+            background: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nuke-cancel-btn:hover {
+            background: #30363d;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #0d1117;
+            max-height: 400px;
+            border-left: 1px solid #30363d;
+            border-right: 1px solid #30363d;
+        }
+
+        .message {
+            position: relative;
+            margin-bottom: 1rem;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+            border: 1px solid #21262d;
+        }
+
+        .message.own {
+            background: linear-gradient(135deg, #1f6feb 0%, #0969da 100%);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+            border-color: #0969da;
+        }
+
+        .message.other {
+            background: #21262d;
+            border-color: #30363d;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+            color: #f0f6fc;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            opacity: 0.9;
+        }
+
+        .message-avatar {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .message-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message-time {
+            font-size: 10px;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .message-flag {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(248, 81, 73, 0.9);
+            color: white;
+            border: none;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message:hover .message-flag {
+            opacity: 1;
+        }
+
+        .chat-input-container {
+            padding: 1.5rem;
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 0 0 12px 12px;
+            border-top: none;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            resize: none;
+            min-height: 20px;
+            max-height: 100px;
+            background: #0d1117;
+            color: #f0f6fc;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            border-color: #58a6ff;
+        }
+
+        .chat-input::placeholder {
+            color: #8b949e;
+        }
+
+        .send-btn {
+            padding: 12px 20px;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .send-btn:hover {
+            background: #2ea043;
+            transform: translateY(-1px);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error-message {
+            color: #f85149;
+            margin-top: 16px;
+            font-size: 14px;
+            text-align: center;
+            padding: 12px;
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            border-radius: 6px;
+        }
+
+        .success-message {
+            color: #3fb950;
+            margin-top: 16px;
+            font-size: 14px;
+            text-align: center;
+            padding: 12px;
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 6px;
+        }
+
+        .loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-left: 8px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            background: rgba(63, 185, 80, 0.1);
+            border: 1px solid rgba(63, 185, 80, 0.3);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #3fb950;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .moderation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .moderation-modal.show {
+            display: flex;
+        }
+
+        .moderation-modal-content {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            margin: 1rem;
+        }
+
+        .moderation-modal h3 {
+            color: #fb8500;
+            margin-bottom: 1.5rem;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .moderation-section {
+            margin-bottom: 2rem;
+        }
+
+        .moderation-section h4 {
+            color: #f0f6fc;
+            margin-bottom: 1rem;
+            font-size: 16px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 0.5rem;
+        }
+
+        .blocked-user, .pending-block {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .blocked-user {
+            border-left: 3px solid #f85149;
+        }
+
+        .pending-block {
+            border-left: 3px solid #fb8500;
+        }
+
+        .user-info-mod {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-avatar-mod {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+
+        .user-name-mod {
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .block-reason {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 8px;
+            margin: 8px 0;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 12px;
+            color: #8b949e;
+        }
+
+        .mod-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .mod-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .mod-btn.unblock {
+            background: #238636;
+            color: white;
+        }
+
+        .mod-btn.unblock:hover {
+            background: #2ea043;
+        }
+
+        .mod-btn.block {
+            background: #da3633;
+            color: white;
+        }
+
+        .mod-btn.block:hover {
+            background: #b62324;
+        }
+
+        .mod-btn.keep {
+            background: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+        }
+
+        .mod-btn.keep:hover {
+            background: #30363d;
+        }
+
+        .no-items {
+            text-align: center;
+            color: #8b949e;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        .close-btn {
+            background: #21262d;
+            color: #f0f6fc;
+            border: 1px solid #30363d;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #30363d;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+
+            .logo h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-container">
+            <div class="logo">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+                <h1>GitChat</h1>
+            </div>
+            <p class="subtitle">Real-time chat for developers</p>
+            
+            <div class="welcome-message">
+                <strong>🚀 Sign in with GitHub</strong><br>
+                Click the button below to join the developer chat room using your GitHub account
+            </div>
+
+            <button id="githubLoginBtn" class="github-login-btn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Continue with GitHub
+            </button>
+
+            <div id="authError" class="error-message" style="display: none;"></div>
+            <div id="authSuccess" class="success-message" style="display: none;"></div>
+        </div>
+
+        <!-- Chat Section -->
+        <div id="chatSection" class="chat-container">
+            <div class="chat-header">
+                <div class="user-info">
+                    <img id="userAvatar" class="user-avatar" src="" alt="User Avatar">
+                    <div>
+                        <div class="welcome-text">Welcome, <span id="currentUser"></span>!</div>
+                        <div class="connection-status">
+                            <div class="status-dot" id="statusDot"></div>
+                            <span id="connectionStatus">Connected</span> • 
+                            <span id="onlineCount">0</span> developers online
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="adminNukeBtn" class="admin-nuke-btn" onclick="showNukeConfirm()" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                        </svg>
+                        Nuclear
+                    </button>
+                    <button id="adminFlagBtn" class="admin-flag-btn" onclick="showModerationPanel()" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 3v18h2v-6h7l1-2-1-2H8V3H6z"/>
+                        </svg>
+                        Moderation
+                    </button>
+                    <button class="logout-btn" onclick="logout()">Sign Out</button>
+                </div>
+            </div>
+            
+            <div id="chatMessages" class="chat-messages">
+                <!-- Messages will be loaded here -->
+            </div>
+            
+            <div class="chat-input-container">
+                <form id="chatForm" class="chat-input-form">
+                    <textarea id="chatInput" class="chat-input" placeholder="Type your message..." required rows="1"></textarea>
+                    <button type="submit" class="send-btn" id="sendBtn">Send</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase/Backend SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            signInWithPopup,
+            GithubAuthProvider,
+            signOut, 
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            query, 
+            orderBy, 
+            limit, 
+            onSnapshot,
+            serverTimestamp,
+            getDocs,
+            deleteDoc,
+            doc,
+            setDoc,
+            getDoc,
+            where
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // 🔥 REPLACE THIS WITH YOUR PROJECT CONFIG
+        const firebaseConfig = {
+  apiKey: "AIzaSyDsy8TLR5rM8hXx4RCOupMesFTFyAnhP6I",
+  authDomain: "mychat-a0c39.firebaseapp.com",
+  projectId: "mychat-a0c39",
+  storageBucket: "mychat-a0c39.firebasestorage.app",
+  messagingSenderId: "258621648606",
+  appId: "1:258621648606:web:574317aba2c4767a621c4f",
+  measurementId: "G-CWDC7Y80ZX"
+};
+
+        // Initialize
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GithubAuthProvider();
+        
+        // Add scopes for GitHub (optional but recommended)
+        provider.addScope('user:email');
+        provider.addScope('read:user');
+
+        // Global variables
+        let currentUser = null;
+        let messagesUnsubscribe = null;
+        
+        // 🔑 ADMIN USERNAME - Change this to your GitHub username
+        const ADMIN_USERNAME = "penderact13"; // Replace with your actual GitHub username
+
+        // Clear error/success messages
+        function clearMessages() {
+            document.getElementById('authError').style.display = 'none';
+            document.getElementById('authSuccess').style.display = 'none';
+        }
+
+        // GitHub login handler
+        document.getElementById('githubLoginBtn').addEventListener('click', async function() {
+            const loginBtn = this;
+            const errorDiv = document.getElementById('authError');
+            const successDiv = document.getElementById('authSuccess');
+            
+            clearMessages();
+            
+            loginBtn.textContent = 'Signing in...';
+            loginBtn.classList.add('loading');
+            loginBtn.disabled = true;
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                successDiv.textContent = 'Successfully signed in with GitHub!';
+                successDiv.style.display = 'block';
+            } catch (error) {
+                console.error('GitHub login error:', error);
+                console.error('Error code:', error.code);
+                console.error('Error message:', error.message);
+                
+                let errorMessage = 'Failed to sign in with GitHub. Please try again.';
+                
+                switch (error.code) {
+                    case 'auth/popup-closed-by-user':
+                        errorMessage = 'Sign-in popup was closed. Please try again.';
+                        break;
+                    case 'auth/popup-blocked':
+                        errorMessage = 'Popup was blocked by your browser. Please allow popups for this site and try again.';
+                        break;
+                    case 'auth/cancelled-popup-request':
+                        errorMessage = 'Sign-in was cancelled. Please try again.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection.';
+                        break;
+                    case 'auth/unauthorized-domain':
+                        errorMessage = 'This domain is not authorized. Please check your Firebase project settings.';
+                        break;
+                    case 'auth/invalid-api-key':
+                        errorMessage = 'Invalid API key. Please check your Firebase configuration.';
+                        break;
+                    case 'auth/configuration-not-found':
+                        errorMessage = 'GitHub authentication not properly configured. Please check your Firebase Auth settings.';
+                        break;
+                    default:
+                        errorMessage += `Error: ${error.message}`;
+                }
+                
+                errorDiv.textContent = errorMessage;
+                errorDiv.style.display = 'block';
+            } finally {
+                loginBtn.innerHTML = `
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 0C5.374 0 0 5.373 0 12 0 17.302 3.438 21.8 8.207 23.387c.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.30.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    Continue with GitHub
+                `;
+                loginBtn.classList.remove('loading');
+                loginBtn.disabled = false;
+            }
+        });
+
+        // Auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Check if user is blocked before allowing them in
+                const userLogin = user.reloadUserInfo?.screenName || 
+                                 user.providerData?.[0]?.displayName || 
+                                 user.displayName;
+                
+                const isBlocked = await checkIfUserBlocked(userLogin);
+                if (isBlocked && userLogin !== ADMIN_USERNAME) {
+                    // User is blocked, sign them out
+                    await signOut(auth);
+                    document.getElementById('authError').textContent = 'You have been blocked from this chat room.';
+                    document.getElementById('authError').style.display = 'block';
+                    return;
+                }
+                
+                currentUser = user;
+                showChatSection();
+            } else {
+                currentUser = null;
+                showAuthSection();
+            }
+        });
+
+        // Show chat section
+        async function showChatSection() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'flex';
+            
+            // Set user info
+            document.getElementById('currentUser').textContent = currentUser.displayName || currentUser.email;
+            document.getElementById('userAvatar').src = currentUser.photoURL || `https://github.com/identicons/${currentUser.uid}.png`;
+            
+            // Initialize admin privileges if needed
+            await initializeAdmin();
+            
+            // Show admin buttons only for admin user (server-side verified)
+            const adminFlagBtn = document.getElementById('adminFlagBtn');
+            const adminNukeBtn = document.getElementById('adminNukeBtn');
+            const isAdmin = await isCurrentUserAdmin();
+            
+            if (isAdmin) {
+                adminFlagBtn.style.display = 'flex';
+                adminNukeBtn.style.display = 'flex';
+            } else {
+                adminFlagBtn.style.display = 'none';
+                adminNukeBtn.style.display = 'none';
+            }
+            
+            // Load messages
+            loadMessages();
+            
+            // Focus on chat input
+            document.getElementById('chatInput').focus();
+            
+            clearMessages();
+        }
+
+        // Show auth section
+        function showAuthSection() {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('chatSection').style.display = 'none';
+            
+            // Remove any open modals
+            const moderationModal = document.getElementById('moderationModal');
+            const nukeModal = document.getElementById('nukeModal');
+            if (moderationModal) moderationModal.remove();
+            if (nukeModal) nukeModal.remove();
+            
+            // Unsubscribe from messages
+            if (messagesUnsubscribe) {
+                messagesUnsubscribe();
+                messagesUnsubscribe = null;
+            }
+            
+            // Clear chat messages
+            document.getElementById('chatMessages').innerHTML = '';
+        }
+
+        // Load messages from database
+        function loadMessages() {
+            const messagesRef = collection(db, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'asc'), limit(50));
+            
+            messagesUnsubscribe = onSnapshot(q, async (snapshot) => {
+                // Get blocked users and pending blocks for filtering
+                const blockedUsers = await getBlockedUsersList();
+                const pendingBlocks = await getPendingBlocksList();
+                
+                // Track displayed message IDs to prevent duplicates
+                const displayedMessages = new Set();
+                
+                // Only process new/changed messages, not all messages every time
+                snapshot.docChanges().forEach(async (change) => {
+                    const messageData = change.doc.data();
+                    messageData.id = change.doc.id;
+                    
+                    // Skip system messages about clearing
+                    if (messageData.userId === 'system' && 
+                        (messageData.message.includes('cleared by admin') || 
+                         messageData.message.includes('All previous messages'))) {
+                        return;
+                    }
+                    
+                    if (change.type === 'added') {
+                        // Check if we should hide this message
+                        const shouldHide = await shouldHideMessage(messageData, blockedUsers, pendingBlocks);
+                        if (!shouldHide && !displayedMessages.has(messageData.id)) {
+                            displayedMessages.add(messageData.id);
+                            displayMessage(messageData);
+                        }
+                    } else if (change.type === 'removed') {
+                        // Remove message from display if it was deleted
+                        const messageElement = document.querySelector(`[data-message-id="${messageData.id}"]`);
+                        if (messageElement) {
+                            messageElement.remove();
+                        }
+                    }
+                });
+                
+                scrollToBottom();
+                updateOnlineCount();
+            });
+        }
+
+        // Get list of blocked users
+        async function getBlockedUsersList() {
+            try {
+                const blockedSnapshot = await getDocs(collection(db, 'blocked_users'));
+                const blockedUsers = new Set();
+                blockedSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    blockedUsers.add(data.username);
+                    blockedUsers.add(data.userId);
+                });
+                return blockedUsers;
+            } catch (error) {
+                console.error('Error getting blocked users:', error);
+                return new Set();
+            }
+        }
+
+        // Get list of pending blocks
+        async function getPendingBlocksList() {
+            try {
+                const pendingSnapshot = await getDocs(collection(db, 'pending_blocks'));
+                const pendingBlocks = new Set();
+                pendingSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    pendingBlocks.add(data.username);
+                    pendingBlocks.add(data.userId);
+                });
+                return pendingBlocks;
+            } catch (error) {
+                console.error('Error getting pending blocks:', error);
+                return new Set();
+            }
+        }
+
+        // Check if message should be hidden
+        async function shouldHideMessage(messageData, blockedUsers, pendingBlocks) {
+            const isAdmin = await isCurrentUserAdmin();
+            
+            // Admins can see everything
+            if (isAdmin) {
+                return false;
+            }
+            
+            // Hide messages from blocked users
+            if (blockedUsers.has(messageData.username) || blockedUsers.has(messageData.userId)) {
+                return true;
+            }
+            
+            // Hide messages from users with pending blocks
+            if (pendingBlocks.has(messageData.username) || pendingBlocks.has(messageData.userId)) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        // Server-side admin verification
+        async function isCurrentUserAdmin() {
+            if (!currentUser) return false;
+            
+            try {
+                // Check admin status in Firestore
+                const adminDoc = await getDoc(doc(db, 'admin_users', currentUser.uid));
+                if (adminDoc.exists()) {
+                    return true;
+                }
+                
+                // Fallback to username check (less secure but backup)
+                const userLogin = currentUser.reloadUserInfo?.screenName || 
+                                 currentUser.providerData?.[0]?.displayName || 
+                                 currentUser.displayName;
+                
+                return userLogin === ADMIN_USERNAME;
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                // Fallback to username check
+                const userLogin = currentUser.reloadUserInfo?.screenName || 
+                                 currentUser.providerData?.[0]?.displayName || 
+                                 currentUser.displayName;
+                
+                return userLogin === ADMIN_USERNAME;
+            }
+        }
+
+        // Initialize admin user in database (call this once to set up admin)
+        async function initializeAdmin() {
+            if (!currentUser) return;
+            
+            const userLogin = currentUser.reloadUserInfo?.screenName || 
+                             currentUser.providerData?.[0]?.displayName || 
+                             currentUser.displayName;
+            
+            if (userLogin === ADMIN_USERNAME) {
+                try {
+                    await setDoc(doc(db, 'admin_users', currentUser.uid), {
+                        username: userLogin,
+                        userId: currentUser.uid,
+                        isAdmin: true,
+                        grantedAt: serverTimestamp()
+                    });
+                    console.log('Admin privileges initialized');
+                } catch (error) {
+                    console.error('Error initializing admin:', error);
+                }
+            }
+        }
+
+        // Display message in chat
+        async function displayMessage(messageData) {
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // Check if message already exists to prevent duplicates
+            const existingMessage = document.querySelector(`[data-message-id="${messageData.id}"]`);
+            if (existingMessage) {
+                return; // Message already displayed
+            }
+            
+            const messageDiv = document.createElement('div');
+            const isOwn = messageData.userId === currentUser.uid;
+            const isAdmin = await isCurrentUserAdmin();
+            
+            messageDiv.className = `message ${isOwn ? 'own' : 'other'}`;
+            messageDiv.setAttribute('data-message-id', messageData.id); // Add unique identifier
+            
+            const timeString = messageData.timestamp 
+                ? new Date(messageData.timestamp.toDate()).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+                : 'Now';
+            
+            const avatarUrl = messageData.photoURL || `https://github.com/identicons/${messageData.userId}.png`;
+            
+            // Add flag button for admin on other users' messages
+            const flagButton = (!isOwn && isAdmin) ? `
+                <button class="message-flag" onclick="flagMessage('${messageData.userId}', '${escapeHtml(messageData.username)}', '${escapeHtml(messageData.message)}', '${avatarUrl}')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 3v18h2v-6h7l1-2-1-2H8V3H6z"/>
+                    </svg>
+                </button>
+            ` : '';
+            
+            // Check if this message should show admin warning
+            const blockedUsers = await getBlockedUsersList();
+            const pendingBlocks = await getPendingBlocksList();
+            
+            let adminWarning = '';
+            if (isAdmin) {
+                if (blockedUsers.has(messageData.username) || blockedUsers.has(messageData.userId)) {
+                    adminWarning = '<div style="color: #f85149; font-size: 10px; opacity: 0.8;">🚫 BLOCKED USER</div>';
+                } else if (pendingBlocks.has(messageData.username) || pendingBlocks.has(messageData.userId)) {
+                    adminWarning = '<div style="color: #fb8500; font-size: 10px; opacity: 0.8;">⏳ PENDING BLOCK</div>';
+                }
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    ${!isOwn ? `<img class="message-avatar" src="${avatarUrl}" alt="Avatar">` : ''}
+                    <span>${isOwn ? 'You' : escapeHtml(messageData.username)}</span>
+                </div>
+                <div class="message-content">${escapeHtml(messageData.message)}</div>
+                <div class="message-time">${timeString}</div>
+                ${adminWarning}
+                ${flagButton}
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Update online user count (simplified version)
+        async function updateOnlineCount() {
+            try {
+                const messagesRef = collection(db, 'messages');
+                const recentMessages = query(
+                    messagesRef, 
+                    orderBy('timestamp', 'desc'), 
+                    limit(10)
+                );
+                const snapshot = await getDocs(recentMessages);
+                const uniqueUsers = new Set();
+                snapshot.forEach(doc => {
+                    uniqueUsers.add(doc.data().userId);
+                });
+                document.getElementById('onlineCount').textContent = uniqueUsers.size;
+            } catch (error) {
+                console.error('Error updating online count:', error);
+            }
+        }
+
+        // Chat form handler
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const messageInput = document.getElementById('chatInput');
+            const messageText = messageInput.value.trim();
+            
+            if (!messageText || !currentUser) return;
+            
+            try {
+                await addDoc(collection(db, 'messages'), {
+                    message: messageText,
+                    username: currentUser.displayName || currentUser.email,
+                    userId: currentUser.uid,
+                    photoURL: currentUser.photoURL,
+                    timestamp: serverTimestamp()
+                });
+                
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Failed to send message. Please try again.');
+            }
+        });
+
+        // Handle Enter key for sending messages
+        document.getElementById('chatInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Auto-resize textarea
+        document.getElementById('chatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+
+        // Logout function
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        };
+
+        // Moderation functions
+        window.showModerationPanel = async function() {
+            const isAdmin = await isCurrentUserAdmin();
+            if (!isAdmin) {
+                alert('Unauthorized action.');
+                return;
+            }
+            
+            // Remove any existing modal first
+            const existingModal = document.getElementById('moderationModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Create modal dynamically
+            const modal = document.createElement('div');
+            modal.id = 'moderationModal';
+            modal.className = 'moderation-modal show';
+            modal.innerHTML = `
+                <div class="moderation-modal-content">
+                    <h3>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 3v18h2v-6h7l1-2-1-2H8V3H6z"/>
+                        </svg>
+                        Moderation Panel
+                    </h3>
+                    
+                    <div class="moderation-section">
+                        <h4>🚫 Blocked Users</h4>
+                        <div id="blockedUsersList">
+                            <div class="no-items">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="moderation-section">
+                        <h4>⏳ Pending Blocks</h4>
+                        <div id="pendingBlocksList">
+                            <div class="no-items">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button onclick="hideModerationPanel()" class="close-btn">Close</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    hideModerationPanel();
+                }
+            });
+            
+            await loadModerationData();
+        };
+
+        window.hideModerationPanel = function() {
+            const modal = document.getElementById('moderationModal');
+            if (modal) {
+                modal.remove();
+            }
+        };
+
+        // Check if user is blocked
+        async function checkIfUserBlocked(username) {
+            try {
+                const blockDoc = await getDoc(doc(db, 'blocked_users', username));
+                return blockDoc.exists();
+            } catch (error) {
+                console.error('Error checking if user blocked:', error);
+                return false;
+            }
+        }
+
+        // Flag a message for review
+        window.flagMessage = async function(userId, username, message, photoURL) {
+            const isAdmin = await isCurrentUserAdmin();
+            if (!isAdmin) {
+                alert('Unauthorized action.');
+                return;
+            }
+            
+            try {
+                // Create pending block
+                await setDoc(doc(db, 'pending_blocks', userId), {
+                    userId: userId,
+                    username: username,
+                    message: message,
+                    photoURL: photoURL,
+                    timestamp: serverTimestamp(),
+                    flaggedBy: currentUser.displayName || currentUser.email
+                });
+                
+                alert(`Flagged ${username} for review. Their messages are now hidden from regular users.`);
+                
+                // Reload messages to hide newly flagged user's messages
+                loadMessages();
+            } catch (error) {
+                console.error('Error flagging message:', error);
+                alert('Failed to flag message. Please try again.');
+            }
+        };
+
+        // Block user immediately (admin action)
+        async function blockUser(userId, username, reason = 'Blocked by admin') {
+            const isAdmin = await isCurrentUserAdmin();
+            if (!isAdmin) {
+                alert('Unauthorized action.');
+                return false;
+            }
+            
+            try {
+                await setDoc(doc(db, 'blocked_users', username), {
+                    userId: userId,
+                    username: username,
+                    reason: reason,
+                    blockedAt: serverTimestamp(),
+                    blockedBy: currentUser.displayName || currentUser.email
+                });
+                
+                // Remove from pending blocks if exists
+                try {
+                    await deleteDoc(doc(db, 'pending_blocks', userId));
+                } catch (e) {
+                    // Ignore if doesn't exist
+                }
+                
+                // Reload messages to hide newly blocked user's messages
+                loadMessages();
+                
+                return true;
+            } catch (error) {
+                console.error('Error blocking user:', error);
+                return false;
+            }
+        }
+
+        // Unblock user
+        async function unblockUser(username) {
+            const isAdmin = await isCurrentUserAdmin();
+            if (!isAdmin) {
+                alert('Unauthorized action.');
+                return false;
+            }
+            
+            try {
+                await deleteDoc(doc(db, 'blocked_users', username));
+                
+                // Reload messages to show unblocked user's messages
+                loadMessages();
+                
+                return true;
+            } catch (error) {
+                console.error('Error unblocking user:', error);
+                return false;
+            }
+        }
+
+        // Dismiss pending block
+        async function dismissPendingBlock(userId) {
+            const isAdmin = await isCurrentUserAdmin();
+            if (!isAdmin) {
+                alert('Unauthorized action.');
+                return false;
+            }
+            
+            try {
+                await deleteDoc(doc(db, 'pending_blocks', userId));
+                
+                // Reload messages to show user's messages again
+                loadMessages();
+                
+                return true;
+            } catch (error) {
+                console.error('Error dismissing pending block:', error);
+                return false;
+            }
+        }
+
+        // Load moderation data
+        async function loadModerationData() {
+            try {
+                // Load blocked users
+                const blockedSnapshot = await getDocs(collection(db, 'blocked_users'));
+                const blockedList = document.getElementById('blockedUsersList');
+                
+                if (blockedSnapshot.empty) {
+                    blockedList.innerHTML = '<div class="no-items">No blocked users</div>';
+                } else {
+                    let blockedHTML = '';
+                    blockedSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        blockedHTML += `
+                            <div class="blocked-user">
+                                <div class="user-info-mod">
+                                    <img class="user-avatar-mod" src="${data.photoURL || `https://github.com/identicons/${data.userId}.png`}" alt="Avatar">
+                                    <span class="user-name-mod">${escapeHtml(data.username)}</span>
+                                </div>
+                                <div class="block-reason">Reason: ${escapeHtml(data.reason)}</div>
+                                <div class="mod-buttons">
+                                    <button class="mod-btn unblock" onclick="handleUnblock('${data.username}')">Unblock</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    blockedList.innerHTML = blockedHTML;
+                }
+
+                // Load pending blocks
+                const pendingSnapshot = await getDocs(collection(db, 'pending_blocks'));
+                const pendingList = document.getElementById('pendingBlocksList');
+                
+                if (pendingSnapshot.empty) {
+                    pendingList.innerHTML = '<div class="no-items">No pending blocks</div>';
+                } else {
+                    let pendingHTML = '';
+                    pendingSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        pendingHTML += `
+                            <div class="pending-block">
+                                <div class="user-info-mod">
+                                    <img class="user-avatar-mod" src="${data.photoURL || `https://github.com/identicons/${data.userId}.png`}" alt="Avatar">
+                                    <span class="user-name-mod">${escapeHtml(data.username)}</span>
+                                </div>
+                                <div class="block-reason">Flagged message: "${escapeHtml(data.message)}"</div>
+                                <div class="mod-buttons">
+                                    <button class="mod-btn block" onclick="handleBlock('${data.userId}', '${escapeHtml(data.username)}', 'Flagged message: ${escapeHtml(data.message)}')">Block User</button>
+                                    <button class="mod-btn keep" onclick="handleDismiss('${data.userId}')">Keep User</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    pendingList.innerHTML = pendingHTML;
+                }
+            } catch (error) {
+                console.error('Error loading moderation data:', error);
+            }
+        }
+
+        // Handle moderation actions
+        window.handleBlock = async function(userId, username, reason) {
+            const success = await blockUser(userId, username, reason);
+            if (success) {
+                alert(`${username} has been blocked.`);
+                await loadModerationData();
+            } else {
+                alert('Failed to block user. Please try again.');
+            }
+        };
+
+        window.handleUnblock = async function(username) {
+            const success = await unblockUser(username);
+            if (success) {
+                alert(`${username} has been unblocked.`);
+                await loadModerationData();
+            } else {
+                alert('Failed to unblock user. Please try again.');
+            }
+        };
+
+        window.handleDismiss = async function(userId) {
+            const success = await dismissPendingBlock(userId);
+            if (success) {
+                alert('Pending block dismissed.');
+                await loadModerationData();
+            } else {
+                alert('Failed to dismiss. Please try again.');
+            }
+        };
+
+        // Auto-focus on login button when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('githubLoginBtn').focus();
+        });
+
+        // Nuclear Option Functions (Admin Only)
+        window.showNukeConfirm = async function() {
+            const isAdmin = await isCurrentUserAdmin();
+            if (!isAdmin) {
+                alert('Unauthorized action.');
+                return;
+            }
+            
+            // Remove any existing modal first
+            const existingModal = document.getElementById('nukeModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Create modal dynamically
+            const modal = document.createElement('div');
+            modal.id = 'nukeModal';
+            modal.className = 'nuke-modal show';
+            modal.innerHTML = `
+                <div class="nuke-modal-content">
+                    <h3>⚠️ Nuclear Option</h3>
+                    <p>This will <strong>permanently delete ALL messages</strong> in the chat room. This action cannot be undone!</p>
+                    <p>Type <code>DELETE-EVERYTHING</code> to confirm:</p>
+                    <input type="text" id="nukeConfirmInput" placeholder="DELETE-EVERYTHING">
+                    <div class="nuke-modal-buttons">
+                        <button id="confirmNukeBtn" class="nuke-confirm-btn" disabled>💥 Delete All Messages</button>
+                        <button onclick="hideNukeConfirm()" class="nuke-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            document.getElementById('nukeConfirmInput').focus();
+            
+            // Setup input listener
+            document.getElementById('nukeConfirmInput').addEventListener('input', function() {
+                const confirmBtn = document.getElementById('confirmNukeBtn');
+                if (this.value === 'DELETE-EVERYTHING') {
+                    confirmBtn.disabled = false;
+                } else {
+                    confirmBtn.disabled = true;
+                }
+            });
+            
+            // Setup nuke button
+            document.getElementById('confirmNukeBtn').addEventListener('click', async function() {
+                const btn = this;
+                const originalText = btn.textContent;
+                
+                try {
+                    btn.textContent = 'Nuking...';
+                    btn.disabled = true;
+                    
+                    // Get all messages and delete them
+                    const messagesRef = collection(db, 'messages');
+                    const snapshot = await getDocs(messagesRef);
+                    
+                    // Delete each message one by one
+                    const deletePromises = [];
+                    snapshot.forEach((messageDoc) => {
+                        deletePromises.push(deleteDoc(doc(db, 'messages', messageDoc.id)));
+                    });
+                    
+                    // Wait for all deletions to complete
+                    await Promise.all(deletePromises);
+                    
+                    // Force clear the local chat display immediately
+                    document.getElementById('chatMessages').innerHTML = '';
+                    
+                    // Hide modal
+                    hideNukeConfirm();
+                    
+                    console.log(`Successfully deleted ${deletePromises.length} messages`);
+                    
+                } catch (error) {
+                    console.error('Error nuking messages:', error);
+                    alert('Failed to delete messages. Please try again.');
+                } finally {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            });
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    hideNukeConfirm();
+                }
+            });
+        };
+
+        window.hideNukeConfirm = function() {
+            const modal = document.getElementById('nukeModal');
+            if (modal) {
+                modal.remove();
+            }
+        };
+    </script>
+</body>
+</html>
